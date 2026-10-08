@@ -1,0 +1,9 @@
+import {it,expect} from 'vitest';
+import {can,runtimeKey,assertSeparatePreview,JOB_TRANSITIONS,RUNTIME_BOUNDARY} from '../src/architecture';
+it('viewer cannot mutate or execute',()=>{for(const c of ['edit','propose','approve','publish','run-job','manage-secrets','delete'] as const)expect(can('viewer',c)).toBe(false);expect(can('viewer','read')).toBe(true);});
+it('editor can prepare but cannot release or grant access',()=>{expect(can('editor','propose')).toBe(true);for(const c of ['approve','publish','rollback','manage-members','manage-secrets','delete'] as const)expect(can('editor',c)).toBe(false);});
+it('runtime scope changes for either tenant project or job',()=>{const a={workspaceId:'w1',projectId:'p1',jobId:'j1'};expect(runtimeKey(a)).not.toBe(runtimeKey({...a,workspaceId:'w2'}));expect(runtimeKey(a)).not.toBe(runtimeKey({...a,projectId:'p2'}));expect(runtimeKey(a)).not.toBe(runtimeKey({...a,jobId:'j2'}));});
+it('runtime key rejects delimiter and traversal injections',()=>expect(()=>runtimeKey({workspaceId:'../w',projectId:'p',jobId:'j'})).toThrow());
+it('preview must be separate and https',()=>{expect(()=>assertSeparatePreview('https://control.example','https://control.example/app')).toThrow();expect(()=>assertSeparatePreview('https://control.example','http://preview.example')).toThrow();expect(()=>assertSeparatePreview('https://control.example','https://preview.example')).not.toThrow();});
+it('terminal job states have no outgoing transitions',()=>{for(const k of ['succeeded','failed','cancelled','timed-out'] as const)expect(JOB_TRANSITIONS[k]).toEqual([]);});
+it('architecture never switches runtime on merely by declaring it',()=>{expect(RUNTIME_BOUNDARY.enabled).toBe(false);expect(RUNTIME_BOUNDARY.controlPlaneSecrets).toBe(false);expect(RUNTIME_BOUNDARY.sharedTenantRuntime).toBe(false);});
