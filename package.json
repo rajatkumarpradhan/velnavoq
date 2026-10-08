@@ -1,0 +1,23 @@
+{
+  "name": "velnavoq",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Velnavoq by Drayvenn Lab - isolated app builder control plane",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && vitest run",
+    "check": "npm run typecheck && npm test && npm audit --audit-level=high",
+    "dev": "wrangler dev --local",
+    "migrate:local": "wrangler d1 migrations apply velnavoq-control --local",
+    "build": "wrangler deploy --dry-run --outdir dist"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261008.1",
+    "@vitest/coverage-v8": "5.0.3",
+    "miniflare": "5.20261006.1-alpha",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3",
+    "wrangler": "4.149.0"
+  }
+}
