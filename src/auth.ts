@@ -23,7 +23,10 @@ export async function project(env:Env,userId:string,id:string,allowed:Role[]=['o
  const p=await env.DB.prepare('SELECT * FROM projects WHERE id=?').bind(id).first<Project>();if(!p)throw new ApiError(404,'project_not_found');await role(env,userId,p.workspace_id,allowed);return p;
 }
 export async function authenticate(req:Request,env:Env,register:boolean):Promise<Response>{
- checkOrigin(req,env.APP_ORIGIN);await rateLimit(req,env,'auth');
+ checkOrigin(req,env.APP_ORIGIN);
+ // Password auth is evaluated locally only: production identity/Free CPU is not verified.
+ const app=new URL(env.APP_ORIGIN);if(app.hostname!=='localhost'||new URL(req.url).hostname!=='localhost')throw new ApiError(503,'production_identity_not_configured');
+ await rateLimit(req,env,'auth');
  if(register&&env.REGISTRATION_ENABLED!=='true')throw new ApiError(403,'registration_closed');
  const b=await readBody(req),email=validateEmail(b.email),password=validatePassword(b.password);let userId:string;
  if(register){userId=crypto.randomUUID();const salt=randomToken(),hash=await passwordHash(password,salt);try{await env.DB.prepare('INSERT INTO users(id,email,password_hash,password_salt,created_at) VALUES(?,?,?,?,?)').bind(userId,email,hash,salt,Date.now()).run();}catch{throw new ApiError(409,'account_not_created');}}
