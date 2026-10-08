@@ -34,5 +34,5 @@ export async function authenticate(req:Request,env:Env,register:boolean):Promise
  const hash=await passwordHash(password,u?.password_salt||'authentication-timing-padding');if(!u||!constantEqual(hash,u.password_hash))throw new ApiError(401,'invalid_credentials');userId=u.id;}
  const token=randomToken(),csrf=randomToken(),now=Math.floor(Date.now()/1000);
  await env.DB.prepare('INSERT INTO sessions(token_hash,user_id,csrf_hash,expires_at,created_at) VALUES(?,?,?,?,?)').bind(await digest(token),userId,await digest(csrf),now+lifetime,now).run();
- return Response.json({userId,csrfToken:csrf,expiresAt:now+lifetime},{headers:{'set-cookie':`velnavoq_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${lifetime}`}});
+ const headers=new Headers();headers.append('set-cookie',`velnavoq_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${lifetime}`);headers.append('set-cookie',`velnavoq_csrf=${csrf}; Secure; SameSite=Strict; Path=/; Max-Age=${lifetime}`);return Response.json({userId,csrfToken:csrf,expiresAt:now+lifetime},{headers});
 }
