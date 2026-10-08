@@ -1,0 +1,31 @@
+-- Durable source rows. Execution/integration tables are metadata only, not working services.
+CREATE TABLE project_versions(project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,version INTEGER NOT NULL,source_digest TEXT NOT NULL,proposal_id TEXT NOT NULL UNIQUE REFERENCES proposals(id) ON DELETE CASCADE,created_by TEXT NOT NULL REFERENCES users(id),created_at INTEGER NOT NULL,PRIMARY KEY(project_id,version));
+CREATE TABLE files(project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,path TEXT NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(project_id,path));
+CREATE TABLE file_versions(project_id TEXT NOT NULL,path TEXT NOT NULL,version INTEGER NOT NULL,content TEXT NOT NULL CHECK(length(CAST(content AS BLOB))<=500000),byte_size INTEGER NOT NULL CHECK(byte_size BETWEEN 0 AND 500000),PRIMARY KEY(project_id,path,version),FOREIGN KEY(project_id,path) REFERENCES files(project_id,path) ON DELETE CASCADE,FOREIGN KEY(project_id,version) REFERENCES project_versions(project_id,version) ON DELETE CASCADE);
+CREATE INDEX file_versions_snapshot ON file_versions(project_id,version,path);
+CREATE TABLE approvals(proposal_id TEXT PRIMARY KEY REFERENCES proposals(id) ON DELETE CASCADE,actor_id TEXT NOT NULL REFERENCES users(id),decision TEXT NOT NULL CHECK(decision IN ('approved','rejected')),digest TEXT NOT NULL,created_at INTEGER NOT NULL);
+INSERT INTO project_versions SELECT project_id,revision,digest,proposal_id,approved_by,created_at FROM source_revisions;
+INSERT INTO files SELECT s.project_id,j.key,min(s.created_at) FROM source_revisions s,json_each(s.bundle_json,'$.files') j GROUP BY s.project_id,j.key;
+INSERT INTO file_versions SELECT s.project_id,j.key,s.revision,j.value,length(CAST(j.value AS BLOB)) FROM source_revisions s,json_each(s.bundle_json,'$.files') j;
+INSERT INTO approvals SELECT id,approved_by,status,digest,decided_at FROM proposals WHERE status<>'pending';
+CREATE TRIGGER normalize_source AFTER INSERT ON source_revisions BEGIN
+ INSERT INTO project_versions VALUES(NEW.project_id,NEW.revision,NEW.digest,NEW.proposal_id,NEW.approved_by,NEW.created_at);
+ INSERT OR IGNORE INTO files SELECT NEW.project_id,key,NEW.created_at FROM json_each(NEW.bundle_json,'$.files');
+ INSERT INTO file_versions SELECT NEW.project_id,key,NEW.revision,value,length(CAST(value AS BLOB)) FROM json_each(NEW.bundle_json,'$.files');
+END;
+CREATE TRIGGER record_approval AFTER UPDATE OF status ON proposals WHEN NEW.status<>'pending' BEGIN INSERT INTO approvals VALUES(NEW.id,NEW.approved_by,NEW.status,NEW.digest,NEW.decided_at); END;
+CREATE TRIGGER project_version_immutable BEFORE UPDATE ON project_versions BEGIN SELECT RAISE(ABORT,'immutable_project_version'); END;
+CREATE TRIGGER file_version_immutable BEFORE UPDATE ON file_versions BEGIN SELECT RAISE(ABORT,'immutable_file_version'); END;
+CREATE TRIGGER approval_immutable BEFORE UPDATE ON approvals BEGIN SELECT RAISE(ABORT,'immutable_approval'); END;
+CREATE TABLE jobs(id TEXT PRIMARY KEY,project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,version INTEGER NOT NULL,requested_by TEXT NOT NULL REFERENCES users(id),kind TEXT NOT NULL,status TEXT NOT NULL CHECK(status IN ('queued','running','succeeded','failed','cancelled','timed-out')),created_at INTEGER NOT NULL,UNIQUE(project_id,id),FOREIGN KEY(project_id,version) REFERENCES project_versions(project_id,version));
+CREATE INDEX jobs_project_time ON jobs(project_id,created_at);
+CREATE TABLE job_events(job_id TEXT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,sequence INTEGER NOT NULL,event_type TEXT NOT NULL,body TEXT NOT NULL CHECK(length(CAST(body AS BLOB))<=16384),created_at INTEGER NOT NULL,PRIMARY KEY(job_id,sequence));
+CREATE TABLE artifacts(id TEXT PRIMARY KEY,project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,job_id TEXT NOT NULL,object_key TEXT NOT NULL UNIQUE,digest TEXT NOT NULL,byte_size INTEGER NOT NULL CHECK(byte_size>=0),created_at INTEGER NOT NULL,UNIQUE(project_id,id),FOREIGN KEY(project_id,job_id) REFERENCES jobs(project_id,id));
+CREATE INDEX artifacts_project_time ON artifacts(project_id,created_at);
+CREATE TABLE releases(id TEXT PRIMARY KEY,project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,artifact_id TEXT NOT NULL,approved_by TEXT NOT NULL REFERENCES users(id),created_at INTEGER NOT NULL,UNIQUE(project_id,id),FOREIGN KEY(project_id,artifact_id) REFERENCES artifacts(project_id,id));
+CREATE TABLE deployments(id TEXT PRIMARY KEY,project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,release_id TEXT NOT NULL,destination TEXT NOT NULL,status TEXT NOT NULL CHECK(status IN ('pending','publishing','healthy','failed','rolled-back')),created_at INTEGER NOT NULL,FOREIGN KEY(project_id,release_id) REFERENCES releases(project_id,id));
+CREATE INDEX deployments_project_time ON deployments(project_id,created_at);
+CREATE TABLE environment_variables(project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,name TEXT NOT NULL,environment TEXT NOT NULL,value TEXT NOT NULL CHECK(length(CAST(value AS BLOB))<=4096),created_at INTEGER NOT NULL,PRIMARY KEY(project_id,name,environment));
+CREATE TABLE secrets_metadata(id TEXT PRIMARY KEY,project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,name TEXT NOT NULL,environment TEXT NOT NULL,vault_reference TEXT NOT NULL,rotated_at INTEGER,created_at INTEGER NOT NULL,UNIQUE(project_id,name,environment));
+CREATE TABLE mcp_connections(id TEXT PRIMARY KEY,project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,resource_uri TEXT NOT NULL,credential_reference TEXT NOT NULL,status TEXT NOT NULL CHECK(status IN ('pending','verified','revoked')),created_at INTEGER NOT NULL,UNIQUE(project_id,id));
+CREATE TABLE mcp_permissions(connection_id TEXT NOT NULL REFERENCES mcp_connections(id) ON DELETE CASCADE,scope TEXT NOT NULL,operation TEXT NOT NULL CHECK(operation IN ('read','propose','execute','publish')),granted_by TEXT NOT NULL REFERENCES users(id),expires_at INTEGER NOT NULL,PRIMARY KEY(connection_id,scope,operation));
