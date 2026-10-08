@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import pathlib,sqlite3,tempfile,subprocess
-schema=pathlib.Path('migrations/0001_control_plane.sql').read_text()
+schema='\n'.join(p.read_text() for p in sorted(pathlib.Path('migrations').glob('*.sql')))
 with tempfile.TemporaryDirectory() as t:
  src=pathlib.Path(t)/'original.db';backup=pathlib.Path(t)/'backup.db';restore=pathlib.Path(t)/'restored.db'
  c=sqlite3.connect(src);c.executescript(schema)
