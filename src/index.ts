@@ -36,5 +36,5 @@ async function route(req:Request,env:Env):Promise<Response>{
 export default {async fetch(req:Request,env:Env):Promise<Response>{
  const requestId=crypto.randomUUID();let res:Response;
  try{res=await route(req,env);}catch(e){if(e instanceof ApiError)res=Response.json({error:e.code,requestId},{status:e.status});else{console.error(JSON.stringify({requestId,error:'internal_error'}));res=Response.json({error:'internal_error',requestId},{status:500});}}
- const h=new Headers(res.headers);h.set('cache-control','no-store');h.set('x-content-type-options','nosniff');h.set('referrer-policy','no-referrer');h.set('x-request-id',requestId);h.set('content-security-policy',"default-src 'none'; frame-ancestors 'none'");return new Response(res.body,{status:res.status,headers:h});
+ const h=new Headers(res.headers);h.set('cache-control','no-store');h.set('x-content-type-options','nosniff');h.set('permissions-policy','camera=(), microphone=(), geolocation=(), payment=()');h.set('referrer-policy','no-referrer');h.set('x-request-id',requestId);h.set('content-security-policy',"default-src 'none'; frame-ancestors 'none'");return new Response(res.body,{status:res.status,headers:h});
 }};
