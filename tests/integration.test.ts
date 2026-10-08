@@ -1,6 +1,6 @@
 import {beforeAll,afterAll,describe,it,expect} from 'vitest';
 import {Miniflare,convertV4MiniflareOptions} from 'miniflare';
-import {readFileSync} from 'node:fs';
+import {readFileSync,readdirSync} from 'node:fs';
 let mf:Miniflare,db:D1Database;
 const origin='http://localhost:8787';
 interface Login{userId:string;csrfToken:string;cookie:string}
@@ -14,8 +14,9 @@ beforeAll(async()=>{
  mf=new Miniflare(convertV4MiniflareOptions({workers:[{name:'control',modules:true,scriptPath:'dist/index.js',compatibilityDate:'2026-10-08',d1Databases:['DB'],bindings:{APP_ORIGIN:origin,REGISTRATION_ENABLED:'true',RUNTIME_ENABLED:'false'}}]}));
  db=await mf.getD1Database('DB');
  // D1 exec is line oriented. Migration statements are run via the same Wrangler local D1 engine.
- const sql=readFileSync('migrations/0001_control_plane.sql','utf8');
- for(const statement of sql.split(/;\n(?=(?:CREATE|PRAGMA|$))/).map(x=>x.trim()).filter(Boolean))await db.prepare(statement).run();
+ for(const file of readdirSync('migrations').filter(x=>x.endsWith('.sql')).sort()){
+ const sql=readFileSync('migrations/'+file,'utf8').replace(/^--.*$/gm,'');
+ for(const statement of sql.split(/;\n(?=(?:CREATE|PRAGMA|$))/).map(x=>x.trim()).filter(Boolean))await db.prepare(statement).run();}
  alice=await signup('alice@example.test');bob=await signup('bob@example.test');
  ws=(await (await request('/api/workspaces','POST',{name:'Alice workspace'},alice)).json() as {id:string}).id;
  proj=(await (await request(`/api/workspaces/${ws}/projects`,'POST',{name:'Real source app'},alice)).json() as {id:string}).id;
@@ -47,5 +48,6 @@ describe('atomic approval against real D1',()=>{
  it('digest mismatch cannot approve',async()=>{const q=await make();expect((await request(`/api/proposals/${q.id}/approve`,'POST',{digest:'bad'},alice)).status).toBe(409);});
  it('tenant cannot inspect or approve proposal',async()=>{const q=await make();expect((await request(`/api/proposals/${q.id}`,'GET',undefined,bob)).status).toBe(404);expect((await request(`/api/proposals/${q.id}/approve`,'POST',{digest:q.digest},bob)).status).toBe(404);});
  it('exact approval, stale revision, replay and audit work',async()=>{const q=await make(),stale=await make();expect((await request(`/api/proposals/${q.id}/approve`,'POST',{digest:q.digest},alice)).status).toBe(200);expect((await request(`/api/proposals/${stale.id}/approve`,'POST',{digest:stale.digest},alice)).status).toBe(409);expect((await request(`/api/proposals/${q.id}/approve`,'POST',{digest:q.digest},alice)).status).toBe(200);const row=await db.prepare('SELECT revision,release_digest FROM projects WHERE id=?').bind(proj).first<{revision:number;release_digest:string}>();expect(row).toMatchObject({revision:1,release_digest:q.digest});expect((await db.prepare('SELECT count(*) as n FROM audit_events WHERE project_id=?').bind(proj).first<{n:number}>())!.n).toBe(1);});
- it('database failure rolls back release and decision together',async()=>{const q=await make({'index.html':'changed'},1);await db.prepare("CREATE TRIGGER force_failure BEFORE INSERT ON audit_events BEGIN SELECT RAISE(ABORT,'test_failure'); END").run();expect((await request(`/api/proposals/${q.id}/approve`,'POST',{digest:q.digest},alice)).status).toBe(409);expect((await db.prepare('SELECT revision FROM projects WHERE id=?').bind(proj).first<{revision:number}>())!.revision).toBe(1);expect((await db.prepare('SELECT status FROM proposals WHERE id=?').bind(q.id).first<{status:string}>())!.status).toBe('pending');await db.prepare('DROP TRIGGER force_failure').run();});
+ it('approved source snapshot is immutable and not a live deployment',async()=>{const r=await db.prepare('SELECT revision,digest FROM source_revisions WHERE project_id=?').bind(proj).all();expect(r.results).toHaveLength(1);expect(r.results[0]?.revision).toBe(1);await expect(db.prepare('UPDATE source_revisions SET digest=? WHERE project_id=?').bind('tamper',proj).run()).rejects.toThrow();});
+ it('database failure rolls back release and decision together',async()=>{const q=await make({'index.html':'changed'},1);await db.prepare("CREATE TRIGGER force_failure BEFORE INSERT ON audit_events BEGIN SELECT RAISE(ABORT,'test_failure'); END").run();expect((await request(`/api/proposals/${q.id}/approve`,'POST',{digest:q.digest},alice)).status).toBe(409);expect((await db.prepare('SELECT revision FROM projects WHERE id=?').bind(proj).first<{revision:number}>())!.revision).toBe(1);expect((await db.prepare('SELECT status FROM proposals WHERE id=?').bind(q.id).first<{status:string}>())!.status).toBe('pending');expect((await db.prepare('SELECT count(*) as n FROM source_revisions WHERE project_id=?').bind(proj).first<{n:number}>())!.n).toBe(1);await db.prepare('DROP TRIGGER force_failure').run();});
 });
