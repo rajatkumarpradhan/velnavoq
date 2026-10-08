@@ -14,7 +14,7 @@ Fresh P0 control-plane implementation. Not a launched AI app builder.
 ## Reproduce
 Node 22.23.3. `npm ci && npm run typecheck && npm run build && npm test`.
 `npm run migrate:local` initializes local D1. `npm run dev` runs locally.
-Registration is disabled by default. To evaluate locally, set `REGISTRATION_ENABLED=true` in `.dev.vars`; never silently enable public signup.
+Password authentication is restricted to localhost and returns 503 on public origins. Production identity is blocked until a provider and Free-plan suitability are verified. Registration is disabled by default. To evaluate locally, set `REGISTRATION_ENABLED=true` in `.dev.vars`; never silently enable public signup.
 The D1 ID in configuration is explicitly a local-only zero ID, not a claimed live resource. No deploy script is provided. `build` is a dry run only.
 
 ## NOT IMPLEMENTED / BLOCKED
