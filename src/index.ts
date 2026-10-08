@@ -8,8 +8,10 @@ async function route(req:Request,env:Env):Promise<Response>{
  if(path==='/api/auth/login'&&method==='POST')return authenticate(req,env,false);
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
  if(method!=='GET')await rateLimit(req,env,'writes',60);
- if(path==='/api/auth/logout'&&method==='POST'){await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(who.sessionHash).run();return Response.json({ok:true},{headers:{'set-cookie':'velnavoq_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0'}});}
- if(path==='/api/me'&&method==='GET')return Response.json({userId:who.userId});
+ if(path==='/api/auth/logout'&&method==='POST'){await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(who.sessionHash).run();const headers=new Headers();headers.append('set-cookie','velnavoq_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0');headers.append('set-cookie','velnavoq_csrf=; Secure; SameSite=Strict; Path=/; Max-Age=0');return Response.json({ok:true},{headers});}
+ if(path==='/api/me'&&method==='GET'){const u=await env.DB.prepare('SELECT email FROM users WHERE id=?').bind(who.userId).first<{email:string}>();const s=await env.DB.prepare('SELECT expires_at FROM sessions WHERE token_hash=?').bind(who.sessionHash).first<{expires_at:number}>();return Response.json({userId:who.userId,email:u?.email,expiresAt:s?.expires_at});}
+ const activity=/^\/api\/workspaces\/([^/]+)\/activity$/.exec(path);
+ if(activity&&method==='GET'){await role(env,who.userId,activity[1]!);return Response.json((await env.DB.prepare('SELECT a.id,a.project_id,p.name as project_name,a.action,a.digest,a.created_at FROM audit_events a JOIN projects p ON p.id=a.project_id WHERE p.workspace_id=? ORDER BY a.id DESC LIMIT 100').bind(activity[1]).all()).results);}
  if(path==='/api/workspaces'&&method==='POST'){
  const body=await readBody(req),id=crypto.randomUUID(),name=validateName(body.name);
  await env.DB.batch([env.DB.prepare('INSERT INTO workspaces(id,name,created_at) VALUES(?,?,?)').bind(id,name,Date.now()),env.DB.prepare('INSERT INTO memberships(workspace_id,user_id,role) VALUES(?,?,?)').bind(id,who.userId,'owner')]);return Response.json({id,name},{status:201});}
