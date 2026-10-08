@@ -1,0 +1,20 @@
+PRAGMA foreign_keys = ON;
+CREATE TABLE users(id TEXT PRIMARY KEY,email TEXT UNIQUE NOT NULL,password_hash TEXT NOT NULL,password_salt TEXT NOT NULL,created_at INTEGER NOT NULL);
+CREATE TABLE sessions(token_hash TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,csrf_hash TEXT NOT NULL,expires_at INTEGER NOT NULL,created_at INTEGER NOT NULL);
+CREATE INDEX session_expiry ON sessions(expires_at);
+CREATE TABLE workspaces(id TEXT PRIMARY KEY,name TEXT NOT NULL,created_at INTEGER NOT NULL);
+CREATE TABLE memberships(workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,role TEXT NOT NULL CHECK(role IN ('owner','editor','viewer')),PRIMARY KEY(workspace_id,user_id));
+CREATE TABLE projects(id TEXT PRIMARY KEY,workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,name TEXT NOT NULL,revision INTEGER NOT NULL DEFAULT 0,release_digest TEXT,release_json TEXT,created_at INTEGER NOT NULL);
+CREATE INDEX project_workspace ON projects(workspace_id);
+CREATE TABLE proposals(id TEXT PRIMARY KEY,project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,base_revision INTEGER NOT NULL,digest TEXT NOT NULL,bundle_json TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')),author_id TEXT NOT NULL REFERENCES users(id),approved_by TEXT REFERENCES users(id),created_at INTEGER NOT NULL,decided_at INTEGER);
+CREATE TABLE audit_events(id INTEGER PRIMARY KEY AUTOINCREMENT,actor_id TEXT NOT NULL,workspace_id TEXT NOT NULL,project_id TEXT,action TEXT NOT NULL,digest TEXT,created_at INTEGER NOT NULL);
+CREATE INDEX audit_workspace ON audit_events(workspace_id,created_at);
+CREATE TABLE rate_limits(key_hash TEXT PRIMARY KEY,window INTEGER NOT NULL,count INTEGER NOT NULL);
+CREATE TRIGGER proposal_immutable BEFORE UPDATE OF project_id,base_revision,digest,bundle_json,author_id ON proposals BEGIN SELECT RAISE(ABORT,'immutable_proposal'); END;
+CREATE TRIGGER proposal_terminal BEFORE UPDATE OF status ON proposals WHEN OLD.status <> 'pending' BEGIN SELECT RAISE(ABORT,'proposal_terminal'); END;
+CREATE TRIGGER approve_release BEFORE UPDATE OF status ON proposals WHEN NEW.status='approved' BEGIN
+ SELECT CASE WHEN (SELECT revision FROM projects WHERE id=NEW.project_id)<>NEW.base_revision THEN RAISE(ABORT,'stale_revision') END;
+ SELECT CASE WHEN NOT EXISTS(SELECT 1 FROM memberships m JOIN projects p ON p.workspace_id=m.workspace_id WHERE p.id=NEW.project_id AND m.user_id=NEW.approved_by AND m.role='owner') THEN RAISE(ABORT,'owner_required') END;
+ UPDATE projects SET revision=revision+1,release_digest=NEW.digest,release_json=NEW.bundle_json WHERE id=NEW.project_id;
+ INSERT INTO audit_events(actor_id,workspace_id,project_id,action,digest,created_at) SELECT NEW.approved_by,workspace_id,id,'approve_release',NEW.digest,NEW.decided_at FROM projects WHERE id=NEW.project_id;
+END;
