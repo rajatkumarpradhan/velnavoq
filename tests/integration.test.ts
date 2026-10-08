@@ -24,6 +24,8 @@ afterAll(async()=>{await mf?.dispose();});
 const make=async(files:Record<string,string>={'index.html':'<h1>Hello</h1>'},baseRevision=0)=>{
  const r=await request(`/api/projects/${proj}/proposals`,'POST',{baseRevision,bundle:{stack:'static-web-v1',files,schema:[],permissions:[]}},alice);expect(r.status).toBe(201);return await r.json() as {id:string;digest:string};};
 describe('real Workers/D1 authentication and tenant isolation',()=>{
+ it('public-origin password auth is fail-closed',async()=>{const r=await mf.dispatchFetch('https://public.example/api/auth/login',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify({email:'alice@example.test',password:'secure-password-long-1234'})});expect(r.status).toBe(503);});
+ it('API denies ambient browser capabilities',async()=>{const r=await request('/api/health');expect(r.headers.get('permissions-policy')).toContain('payment=()');expect(r.headers.get('content-security-policy')).toContain("default-src 'none'");expect(r.headers.get('cache-control')).toBe('no-store');});
  it('requires login',async()=>expect((await request(`/api/projects/${proj}`)).status).toBe(401));
  it('sets secure session cookie',async()=>{const r=await request('/api/auth/login','POST',{email:'alice@example.test',password:'secure-password-long-1234'});expect(r.headers.get('set-cookie')).toContain('HttpOnly; Secure; SameSite=Strict');});
  it('incorrect password fails',async()=>expect((await request('/api/auth/login','POST',{email:'alice@example.test',password:'wrong-password-long-1234'})).status).toBe(401));
