@@ -1,3 +1,4 @@
+import {persistence} from './persistence';
 import {tenancy} from './tenancy';
 import {ApiError,type Env,type Proposal} from './contracts';
 import {authenticate,identity,project,rateLimit,role} from './auth';
@@ -9,6 +10,7 @@ async function route(req:Request,env:Env):Promise<Response>{
  if(path==='/api/auth/login'&&method==='POST')return authenticate(req,env,false);
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
  if(method!=='GET')await rateLimit(req,env,'writes',60);
+ const persistedResponse=await persistence(req,env,who);if(persistedResponse)return persistedResponse;
  const tenantResponse=await tenancy(req,env,who);if(tenantResponse)return tenantResponse;
  if(path==='/api/auth/logout'&&method==='POST'){await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(who.sessionHash).run();const headers=new Headers();headers.append('set-cookie','velnavoq_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0');headers.append('set-cookie','velnavoq_csrf=; Secure; SameSite=Strict; Path=/; Max-Age=0');return Response.json({ok:true},{headers});}
  if(path==='/api/me'&&method==='GET'){const u=await env.DB.prepare('SELECT email FROM users WHERE id=?').bind(who.userId).first<{email:string}>();const s=await env.DB.prepare('SELECT expires_at FROM sessions WHERE token_hash=?').bind(who.sessionHash).first<{expires_at:number}>();return Response.json({userId:who.userId,email:u?.email,expiresAt:s?.expires_at});}
