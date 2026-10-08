@@ -7,6 +7,7 @@ Fresh P0 control-plane implementation. Not a launched AI app builder.
 - Workers TypeScript API, pinned dependencies and D1 migrations.
 - Email/password authentication, salted PBKDF2-SHA256 (600,000 iterations), opaque hashed server sessions, exact-origin and CSRF checks, expiry/logout.
 - Workspace/project create/list/read with owner/editor/viewer authorization.
+- Immutable approved-source history stored transactionally, separate from a live deployment.
 - Immutable static-web-v1 source proposals with canonical digests and base revision checks.
 - Approval/rejection and idempotent retry. D1 triggers update approved source, revision and audit atomically. Tests inject an audit failure to prove rollback.
 - Database-backed auth/write rate limits, body/filename/file-count/size limits, redacted internal errors.
