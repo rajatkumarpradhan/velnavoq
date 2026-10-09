@@ -15,3 +15,5 @@ Unsaved indicators, discard confirmation, browser unload warnings and hash-navig
 ## Mobile verification
 
 Languages are split into on-demand chunks; CodeMirror virtualizes visible lines. No worker runtime or desktop IDE bundle is loaded. The base app and editor chunk sizes are measured by Vite, not estimated. Tests use browser viewports 360/390/412 and desktop, check overflow, header overlap, axe accessibility and screenshot pixels. A 4x CPU throttle checks actual typed input latency. This is a browser proxy, not a physical OnePlus performance certification. Full mobile device/Safari checks remain unverified.
+
+Stress testing a 5,000-line buffer crashed the headless browser. Editing now explicitly refuses files above 50KB or 2,000 lines and prevents transactions from exceeding those bounds. Stored large files remain unchanged, not silently truncated. A 1,000-line buffer is separately tested.
