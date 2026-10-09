@@ -3,6 +3,7 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-10-08",
   "workers_dev": false,
-  "vars": {"APP_ORIGIN":"http://localhost:8787", "REGISTRATION_ENABLED":"false", "RUNTIME_ENABLED":"false"},
+  "ai": {"binding":"AI"},
+  "vars": {"APP_ORIGIN":"http://localhost:8787", "REGISTRATION_ENABLED":"false", "RUNTIME_ENABLED":"false", "AI_REPAIR_ENABLED":"false"},
   "d1_databases": [{"binding":"DB","database_name":"velnavoq-control","database_id":"00000000-0000-0000-0000-000000000000","migrations_dir":"migrations"}]
 }
