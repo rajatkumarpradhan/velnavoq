@@ -1,6 +1,6 @@
 # Velnavoq MCP architecture
 
-Part 14, researched and tested 10 October 2026. Protocol baseline: **2026-07-28**. This is a limited modern MCP server and owner permission UI, not a remote-server connector or a claim of universal client compatibility. Source and tests are implemented; the control plane is not deployed.
+Part 14, researched and tested 10 October 2026. Protocol baseline: **2026-07-28**. This is a limited modern MCP server and owner permission UI, not a remote-server connector or a claim of universal client compatibility. Source and tests are implemented; the control plane is not deployed. Existing password sign-in is explicitly local-only; production owner identity still needs configuration before this OAuth flow can be enabled publicly.
 
 ## Current specification decision
 
@@ -43,7 +43,7 @@ Limits: 60 public MCP requests/minute/IP, 30 authenticated MCP requests/minute/t
 
 ## Verification
 
-npm run check: 283 backend tests across 12 files, typecheck and zero npm audit vulnerabilities. Part 14 includes 24 tests covering unauthorized access, exact consent, S256 client/resource/redirect/verifier binding, code replay/concurrency, scope/project isolation, expiry/issuer/audience, membership loss, session-versus-bearer separation, revocation/no-revival, traversal/secrets, immutable proposal-not-apply, bounded mutation, version negotiation, audit and rates.
+npm run check: 284 backend tests across 12 files, typecheck and zero npm audit vulnerabilities. Part 14 includes 25 tests covering unauthorized access, exact consent, S256 client/resource/redirect/verifier binding, code replay/concurrency, schema argument types, scope/project isolation, expiry/issuer/audience, membership loss, session-versus-bearer separation, revocation/no-revival, traversal/secrets, immutable proposal-not-apply, bounded mutation, version negotiation, audit and rates.
 
 npm run ui:build && node scripts/mcp-check.mjs: 20 checks using a real local Worker/D1 and browser, registration without grant, explicit owner review, callback state/issuer, token redemption, protected project RPC and UI revocation to 401; 360/390/412/1440 layout/accessibility checks. This proves the local flow, not deployed endpoint reachability, physical phone/Safari performance or independent-client compatibility.
 
