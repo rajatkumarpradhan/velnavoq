@@ -1,3 +1,4 @@
+import {codingAgentApi,verifyAgentApproval} from './coding-agent-api';
 import {aiApi} from './ai-api';
 import {persistence} from './persistence';
 import {tenancy} from './tenancy';
@@ -11,6 +12,7 @@ async function route(req:Request,env:Env):Promise<Response>{
  if(path==='/api/auth/login'&&method==='POST')return authenticate(req,env,false);
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
  if(method!=='GET')await rateLimit(req,env,'writes',60);
+ const agentResponse=await codingAgentApi(req,env,who);if(agentResponse)return agentResponse;
  const aiResponse=await aiApi(req,env,who);if(aiResponse)return aiResponse;
  const persistedResponse=await persistence(req,env,who);if(persistedResponse)return persistedResponse;
  const tenantResponse=await tenancy(req,env,who);if(tenantResponse)return tenantResponse;
@@ -35,8 +37,8 @@ async function route(req:Request,env:Env):Promise<Response>{
  if(pr[2]==='proposals'&&method==='POST'){const b=await readBody(req);if(b.baseRevision!==p.revision)throw new ApiError(409,'stale_revision');const bundle=validateBundle(b.bundle),serialized=canonical(bundle),hash=await digest(serialized),id=crypto.randomUUID();await env.DB.prepare('INSERT INTO proposals(id,project_id,base_revision,digest,bundle_json,author_id,created_at) VALUES(?,?,?,?,?,?,?)').bind(id,p.id,p.revision,hash,serialized,who.userId,Date.now()).run();return Response.json({id,digest:hash,baseRevision:p.revision},{status:201});}}
  const decision=/^\/api\/proposals\/([^/]+)(?:\/(approve|reject))?$/.exec(path);
  if(decision){const proposal=await env.DB.prepare('SELECT * FROM proposals WHERE id=?').bind(decision[1]!).first<Proposal>();if(!proposal)throw new ApiError(404,'proposal_not_found');const p=await project(env,who.userId,proposal.project_id,method==='POST'?['owner']:['owner','editor','viewer']);
- if(!decision[2]&&method==='GET')return Response.json({...proposal,bundle:JSON.parse(proposal.bundle_json)});
- if(method==='POST'&&decision[2]){const b=await readBody(req);if(b.digest!==proposal.digest||await digest(proposal.bundle_json)!==proposal.digest)throw new ApiError(409,'digest_mismatch');const desired=decision[2]==='approve'?'approved':'rejected';
+ if(!decision[2]&&method==='GET')return Response.json({...proposal,bundle:JSON.parse(proposal.bundle_json),agentPatch:await env.DB.prepare('SELECT patch_digest,changes_json,destructive FROM agent_patches WHERE proposal_id=?').bind(proposal.id).first()});
+ if(method==='POST'&&decision[2]){const b=await readBody(req);if(b.digest!==proposal.digest||await digest(proposal.bundle_json)!==proposal.digest)throw new ApiError(409,'digest_mismatch');const desired=decision[2]==='approve'?'approved':'rejected';if(desired==='approved')await verifyAgentApproval(env,proposal,b);
  if(proposal.status===desired)return Response.json({status:desired,idempotent:true});if(proposal.status!=='pending')throw new ApiError(409,'proposal_terminal');if(desired==='approved'&&proposal.base_revision!==p.revision)throw new ApiError(409,'stale_revision');
  try{const result=await env.DB.prepare('UPDATE proposals SET status=?,approved_by=?,decided_at=? WHERE id=? AND status=?').bind(desired,who.userId,Date.now(),proposal.id,'pending').run();if(!result.meta.changes)throw new ApiError(409,'proposal_changed');}catch(e){if(e instanceof ApiError)throw e;throw new ApiError(409,'atomic_approval_conflict');}return Response.json({status:desired});}}
  throw new ApiError(404,'not_found');
