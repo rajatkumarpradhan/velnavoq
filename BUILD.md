@@ -22,7 +22,7 @@ Artifacts download as application/zip + attachment + nosniff through authenticat
 
 ## Tests
 
-228 backend/domain tests including real build ZIP bytes, intentional JS/inline/JSON syntax failure, missing/external dependencies, forbidden packages/scripts, traversal, source/artifact quotas, deadlines, retry, authenticated identity, concurrency, receipt ordering, source revision immutability, inert download, artifact expiry and cleanup. Existing QuickJS abuse tests still run.
+229 backend/domain tests including real build ZIP bytes, intentional JS/inline/JSON syntax failure, missing/external dependencies, forbidden packages/scripts, traversal, source/artifact quotas, deadlines, retry, authenticated identity, concurrency, receipt ordering, source revision immutability, inert download, artifact expiry and cleanup. Existing QuickJS abuse tests still run.
 
 Production-preview build browser checks use real local Worker/D1: success ZIP unzip + exact source, persisted log reload, intentional app.js syntax error visible, failure no-artifact, Worker cancellation, 360/390/412/1440 overflow/header/a11y. Browser cancellation test delays loading Worker asset to avoid racing an already-completed small build; actual Worker terminate path and D1 cancel receipt are exercised. UI tests 254 and backup binary/SQL restore pass. Physical OnePlus/Safari untested. No fake success or public deployment claim.
 
