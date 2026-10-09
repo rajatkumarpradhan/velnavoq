@@ -1,0 +1,2 @@
+import {execute} from '../../runtime/engine';
+self.onmessage=async(e:MessageEvent)=>{const started=performance.now();const {command,files,timeoutMs}=e.data;try{const result=await execute(command,files,timeoutMs,(stream,text)=>self.postMessage({kind:'output',stream,text}));self.postMessage({kind:'result',result})}catch{self.postMessage({kind:'result',result:{status:'failed',exitCode:1,durationMs:Math.round(performance.now()-started)},error:'runtime_failure'})}};
