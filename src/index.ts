@@ -1,3 +1,4 @@
+import {humanApproval} from './human-approval';import {oauthClient} from './oauth-client';
 import {mcpEndpoint} from './mcp-api';import {oauthPublic,mcpManage} from './mcp-auth';
 import {repairApi} from './repair-api';
 import {previewApi} from './preview-api';
@@ -13,13 +14,13 @@ import {authenticate,identity,project,rateLimit,role} from './auth';
 import {canonical,digest,readBody,validateBundle,validateName} from './security';
 async function route(req:Request,env:Env):Promise<Response>{
  const url=new URL(req.url),path=url.pathname,method=req.method;
- const oauth=await oauthPublic(req,env);if(oauth)return oauth;const mcp=await mcpEndpoint(req,env);if(mcp)return mcp;
+ if(path==='/oauth/callback'){const callback=await oauthClient(req,env);if(callback)return callback;}const oauth=await oauthPublic(req,env);if(oauth)return oauth;const mcp=await mcpEndpoint(req,env);if(mcp)return mcp;
  if(path==='/api/health'&&method==='GET')return Response.json({service:'velnavoq-control',status:'ok',runtime:'disabled',supportedStack:'static-web-v1'});
  if(path==='/api/auth/register'&&method==='POST')return authenticate(req,env,true);
  if(path==='/api/auth/login'&&method==='POST')return authenticate(req,env,false);
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
  if(method!=='GET')await rateLimit(req,env,'writes',60);
- const mcpManagement=await mcpManage(req,env,who);if(mcpManagement)return mcpManagement;
+ const clientFlow=await oauthClient(req,env,who);if(clientFlow)return clientFlow;const human=await humanApproval(req,env,who);if(human)return human;const mcpManagement=await mcpManage(req,env,who);if(mcpManagement)return mcpManagement;
  const repairResponse=await repairApi(req,env,who);if(repairResponse)return repairResponse;
  const previewResponse=await previewApi(req,env,who);if(previewResponse)return previewResponse;
  const buildResponse=await buildApi(req,env,who);if(buildResponse)return buildResponse;
