@@ -1,3 +1,4 @@
+import {previewApi} from './preview-api';
 import {buildApi} from './build-api';
 import {terminalApi} from './terminal-api';
 import {editorApi} from './editor-api';
@@ -15,6 +16,7 @@ async function route(req:Request,env:Env):Promise<Response>{
  if(path==='/api/auth/login'&&method==='POST')return authenticate(req,env,false);
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
  if(method!=='GET')await rateLimit(req,env,'writes',60);
+ const previewResponse=await previewApi(req,env,who);if(previewResponse)return previewResponse;
  const buildResponse=await buildApi(req,env,who);if(buildResponse)return buildResponse;
  const terminalResponse=await terminalApi(req,env,who);if(terminalResponse)return terminalResponse;
  const editorResponse=await editorApi(req,env,who);if(editorResponse)return editorResponse;
