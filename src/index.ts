@@ -1,3 +1,4 @@
+import {aiApi} from './ai-api';
 import {persistence} from './persistence';
 import {tenancy} from './tenancy';
 import {ApiError,type Env,type Proposal} from './contracts';
@@ -10,6 +11,7 @@ async function route(req:Request,env:Env):Promise<Response>{
  if(path==='/api/auth/login'&&method==='POST')return authenticate(req,env,false);
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
  if(method!=='GET')await rateLimit(req,env,'writes',60);
+ const aiResponse=await aiApi(req,env,who);if(aiResponse)return aiResponse;
  const persistedResponse=await persistence(req,env,who);if(persistedResponse)return persistedResponse;
  const tenantResponse=await tenancy(req,env,who);if(tenantResponse)return tenantResponse;
  if(path==='/api/auth/logout'&&method==='POST'){await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(who.sessionHash).run();const headers=new Headers();headers.append('set-cookie','velnavoq_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0');headers.append('set-cookie','velnavoq_csrf=; Secure; SameSite=Strict; Path=/; Max-Age=0');return Response.json({ok:true},{headers});}
