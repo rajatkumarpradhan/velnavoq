@@ -1,1 +1,6 @@
-
+CREATE TABLE build_jobs(id TEXT PRIMARY KEY,project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,user_id TEXT NOT NULL REFERENCES users(id),runtime_id TEXT NOT NULL UNIQUE,revision INTEGER NOT NULL,source_digest TEXT NOT NULL,command TEXT NOT NULL,timeout_ms INTEGER NOT NULL,status TEXT NOT NULL CHECK(status IN ('running','succeeded','failed','cancelled','timed_out')),created_at INTEGER NOT NULL,deadline_at INTEGER NOT NULL,finished_at INTEGER,exit_code INTEGER,duration_ms INTEGER,receipt_origin TEXT NOT NULL DEFAULT 'browser-unverified');
+CREATE UNIQUE INDEX build_one_active_user ON build_jobs(user_id) WHERE status='running';
+CREATE TABLE build_events(job_id TEXT NOT NULL REFERENCES build_jobs(id) ON DELETE CASCADE,seq INTEGER NOT NULL,stream TEXT NOT NULL,text TEXT NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(job_id,seq));
+CREATE TABLE build_artifacts(job_id TEXT PRIMARY KEY REFERENCES build_jobs(id) ON DELETE CASCADE,files_json TEXT NOT NULL,digest TEXT NOT NULL,bytes INTEGER NOT NULL CHECK(bytes<=600000),expires_at INTEGER NOT NULL);
+CREATE TRIGGER build_identity_immutable BEFORE UPDATE OF project_id,workspace_id,user_id,runtime_id,revision,source_digest,command,timeout_ms,created_at,deadline_at ON build_jobs BEGIN SELECT RAISE(ABORT,'build_identity_immutable'); END;
+CREATE TRIGGER build_terminal_immutable BEFORE UPDATE ON build_jobs WHEN OLD.status <> 'running' BEGIN SELECT RAISE(ABORT,'build_terminal_immutable'); END;
