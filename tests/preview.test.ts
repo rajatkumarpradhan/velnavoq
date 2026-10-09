@@ -1,0 +1,7 @@
+import {it,expect} from 'vitest';import {previewDocument} from '../runtime/preview';
+it('rewrites actual script/style assets into inert document',()=>{const s=previewDocument({'index.html':'<!doctype html><script src="app.js"></script><link rel="stylesheet" href="a.css">','app.js':'console.log(1)','a.css':'body{color:red}'});expect(s).toContain('data:text/javascript;base64');expect(s).toContain('body{color:red}');expect(s).toContain("connect-src 'none'")});
+it('module dependency recursively maps local source',()=>expect(previewDocument({'index.html':'<script type="module" src="a.js"></script>','a.js':'import {x} from "./b.js"','b.js':'export const x=1'})).toContain('data:text/javascript;base64'));
+it('cyclic modules fail honestly',()=>expect(()=>previewDocument({'index.html':'<script type="module" src="a.js"></script>','a.js':'import "./a.js"'})).toThrow('cyclic'));
+it('missing assets fail',()=>expect(()=>previewDocument({'index.html':'<script src="missing.js"></script>'})).toThrow('missing_asset'));
+it('removes meta refresh/base/embedded privileged frames',()=>{const s=previewDocument({'index.html':'<base href="https://bad.test"><meta http-equiv="refresh" content="0;url=https://bad.test"><iframe src="https://bad.test"></iframe><object></object>'});expect(s).not.toContain('https://bad.test');expect(s).not.toContain('<iframe')});
+it('nonliteral dynamic module denied',()=>expect(()=>previewDocument({'index.html':'<script src="a.js"></script>','a.js':'import(anything)'})).toThrow('dynamic_import_denied'));
