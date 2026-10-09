@@ -16,6 +16,7 @@ with tempfile.TemporaryDirectory() as t:
  c.execute("UPDATE proposals SET status='approved',approved_by='local-test',decided_at=2 WHERE id='proposal'")
  c.executescript(migrations[3].read_text())
  assert c.execute('SELECT count(*) FROM file_versions').fetchone()[0]==2
+ for migration in migrations[4:]:c.executescript(migration.read_text())
  # Relationships only: lifecycle metadata is not evidence that a runner or deploy exists.
  c.execute("INSERT INTO jobs VALUES('job','project',1,'local-test','schema-restore-test','queued',3)")
  c.execute("INSERT INTO job_events VALUES('job',1,'queued','test metadata',3)")
