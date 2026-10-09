@@ -45,7 +45,7 @@ npm run check: 298 tests across 13 files, typecheck and zero audit vulnerabiliti
 
 npm run ui:build && node scripts/approval-check.mjs: 19 actual local Worker/D1/browser checks: reference authorization through consent and callback, hidden token, revocation, displayed exact changes/permissions/risk, acknowledgement, atomic approved source revision, 360/390/412/1440 layouts and accessibility.
 
-Regression checks: 29 editor checks, 254 UI checks, plus navigation/MCP/runtime checks listed in the final test report. Backup/restore verifies populated migrations, binary and SQL restoration, foreign keys and immutable triggers. Viewport/accessibility checks are desktop browser tests, not physical OnePlus or Safari performance.
+Regression checks: 29 editor, 254 UI, 39 navigation, 20 MCP, 28 terminal, 23 build and 16 repair checks. Preview checks require a UI build with VITE_PREVIEW_HOST=http://127.0.0.1:5190/; this test-only loopback host is not a production deployment. Backup/restore verifies populated migrations, binary and SQL restoration, foreign keys and immutable triggers. Viewport/accessibility checks are desktop browser tests, not physical OnePlus or Safari performance.
 
 ## Current guidance used
 
