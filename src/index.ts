@@ -1,4 +1,4 @@
-import {humanApproval} from './human-approval';import {oauthClient} from './oauth-client';
+import {humanApproval,review} from './human-approval';import {oauthClient} from './oauth-client';
 import {mcpEndpoint} from './mcp-api';import {oauthPublic,mcpManage} from './mcp-auth';
 import {repairApi} from './repair-api';
 import {previewApi} from './preview-api';
@@ -53,8 +53,8 @@ async function route(req:Request,env:Env):Promise<Response>{
  if(decision){const proposal=await env.DB.prepare('SELECT * FROM proposals WHERE id=?').bind(decision[1]!).first<Proposal>();if(!proposal)throw new ApiError(404,'proposal_not_found');const p=await project(env,who.userId,proposal.project_id,method==='POST'?['owner']:['owner','editor','viewer']);
  if(!decision[2]&&method==='GET')return Response.json({...proposal,bundle:JSON.parse(proposal.bundle_json),agentPatch:await env.DB.prepare('SELECT patch_digest,changes_json,destructive FROM agent_patches WHERE proposal_id=?').bind(proposal.id).first()});
  if(method==='POST'&&decision[2]){const b=await readBody(req);if(b.digest!==proposal.digest||await digest(proposal.bundle_json)!==proposal.digest)throw new ApiError(409,'digest_mismatch');const desired=decision[2]==='approve'?'approved':'rejected';if(desired==='approved')await verifyAgentApproval(env,proposal,b);
- if(proposal.status===desired)return Response.json({status:desired,idempotent:true});if(proposal.status!=='pending')throw new ApiError(409,'proposal_terminal');if(desired==='approved'&&proposal.base_revision!==p.revision)throw new ApiError(409,'stale_revision');
- try{const result=await env.DB.prepare('UPDATE proposals SET status=?,approved_by=?,decided_at=? WHERE id=? AND status=?').bind(desired,who.userId,Date.now(),proposal.id,'pending').run();if(!result.meta.changes)throw new ApiError(409,'proposal_changed');}catch(e){if(e instanceof ApiError)throw e;throw new ApiError(409,'atomic_approval_conflict');}return Response.json({status:desired});}}
+ if(proposal.status===desired)return Response.json({status:desired,idempotent:true});if(proposal.status!=='pending')throw new ApiError(409,'proposal_terminal');if(desired==='approved'&&proposal.base_revision!==p.revision)throw new ApiError(409,'stale_revision');const manifest=await review(env,proposal);if(b.reviewDigest!==manifest.reviewDigest||b.baseRevision!==proposal.base_revision||desired==='approved'&&(b.acceptRisk!==manifest.risk||manifest.risk==='high'&&b.approveDestructive!==true))throw new ApiError(409,'exact_review_required');
+ try{const results=await env.DB.batch([env.DB.prepare('UPDATE proposals SET status=?,approved_by=?,decided_at=? WHERE id=? AND status=?').bind(desired,who.userId,Date.now(),proposal.id,'pending'),env.DB.prepare('INSERT INTO human_review_audit(proposal_id,project_id,actor_id,decision,proposal_digest,review_digest,base_revision,created_at) VALUES(?,?,?,?,?,?,?,?)').bind(proposal.id,p.id,who.userId,decision[2],proposal.digest,manifest.reviewDigest,proposal.base_revision,Date.now())]);if(!results[0]!.meta.changes)throw new ApiError(409,'proposal_changed');}catch(e){if(e instanceof ApiError)throw e;throw new ApiError(409,'atomic_approval_conflict');}return Response.json({status:desired});}}
  throw new ApiError(404,'not_found');
 }
 export default {async fetch(req:Request,env:Env):Promise<Response>{
