@@ -1,3 +1,4 @@
+import {environmentApi,rejectEnvironmentLeak} from './project-environment';
 import {humanApproval,review} from './human-approval';import {oauthClient} from './oauth-client';
 import {mcpEndpoint} from './mcp-api';import {oauthPublic,mcpManage} from './mcp-auth';
 import {repairApi} from './repair-api';
@@ -20,7 +21,7 @@ async function route(req:Request,env:Env):Promise<Response>{
  if(path==='/api/auth/login'&&method==='POST')return authenticate(req,env,false);
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
  if(method!=='GET')await rateLimit(req,env,'writes',60);
- const clientFlow=await oauthClient(req,env,who);if(clientFlow)return clientFlow;const human=await humanApproval(req,env,who);if(human)return human;const mcpManagement=await mcpManage(req,env,who);if(mcpManagement)return mcpManagement;
+ if(!['GET','HEAD'].includes(method)&&!path.includes('/environment')&&req.headers.get('content-type')?.startsWith('application/json')){let target=/^\/api\/projects\/([^/]+)/.exec(path)?.[1];const proposalId=/^\/api\/proposals\/([^/]+)/.exec(path)?.[1];if(proposalId)target=(await env.DB.prepare('SELECT project_id FROM proposals WHERE id=?').bind(proposalId).first<{project_id:string}>())?.project_id;if(target){await project(env,who.userId,target);await rejectEnvironmentLeak(env,target,await req.clone().text())}}const environment=await environmentApi(req,env,who);if(environment)return environment;const clientFlow=await oauthClient(req,env,who);if(clientFlow)return clientFlow;const human=await humanApproval(req,env,who);if(human)return human;const mcpManagement=await mcpManage(req,env,who);if(mcpManagement)return mcpManagement;
  const repairResponse=await repairApi(req,env,who);if(repairResponse)return repairResponse;
  const previewResponse=await previewApi(req,env,who);if(previewResponse)return previewResponse;
  const buildResponse=await buildApi(req,env,who);if(buildResponse)return buildResponse;
