@@ -1,3 +1,4 @@
+import {editorApi} from './editor-api';
 import {codingAgentApi,verifyAgentApproval} from './coding-agent-api';
 import {aiApi} from './ai-api';
 import {persistence} from './persistence';
@@ -12,6 +13,7 @@ async function route(req:Request,env:Env):Promise<Response>{
  if(path==='/api/auth/login'&&method==='POST')return authenticate(req,env,false);
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
  if(method!=='GET')await rateLimit(req,env,'writes',60);
+ const editorResponse=await editorApi(req,env,who);if(editorResponse)return editorResponse;
  const agentResponse=await codingAgentApi(req,env,who);if(agentResponse)return agentResponse;
  const aiResponse=await aiApi(req,env,who);if(aiResponse)return aiResponse;
  const persistedResponse=await persistence(req,env,who);if(persistedResponse)return persistedResponse;
