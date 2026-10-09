@@ -1,0 +1,22 @@
+import {describe,it,expect} from 'vitest';import {execute,parseCommand,policy} from '../runtime/engine';
+const run=async(code:string,timeout=500)=>{let out='',err='';const result=await execute('js main.js',{'main.js':code},timeout,(s,t)=>s==='stdout'?out+=t:err+=t);return {result,out,err}};
+describe('actual QuickJS WASM execution and isolation',()=>{
+it('streams real stdout and stderr',async()=>{const x=await run('console.log(2+3);console.error("bad");');expect(x.out).toBe('5\n');expect(x.err).toBe('bad\n');expect(x.result.status).toBe('succeeded');expect(x.result.durationMs).toBeGreaterThanOrEqual(0)});
+it('syntax errors fail',async()=>expect((await run('const = bad')).result.exitCode).toBe(1));
+it('interrupts infinite loops',async()=>expect((await run('while(true){}',30)).result.status).toBe('timed_out'));
+it('memory exhaustion is bounded',async()=>expect((await run('new ArrayBuffer(32*1024*1024)')).result.status).toBe('failed'));
+it('stack exhaustion fails',async()=>expect((await run('function f(){return f()}f()')).result.status).toBe('failed'));
+it('output flood is bounded',async()=>{const x=await run('while(true)console.log("x".repeat(1000));');expect(x.out.length).toBeLessThanOrEqual(policy.outputBytes);expect(x.result.status).toBe('failed')});
+it.each(['fetch','XMLHttpRequest','WebSocket','document','window','process','require','postMessage','localStorage','navigator','Worker'])('does not expose host %s',async name=>expect((await run('console.log(typeof '+name+')')).out).toBe('undefined\n'));
+it('constructor escape stays within guest',async()=>expect((await run('console.log(console.log.constructor("return typeof process")());')).out).toBe('undefined\n'));
+it('separate runtimes cannot see globals',async()=>{await run('globalThis.secret=42');expect((await run('console.log(typeof secret)')).out).toBe('undefined\n')});
+it('can import supplied relative JavaScript only',async()=>{let out='';const r=await execute('js main.js',{'main.js':'import {x} from "./lib.js";console.log(x)','lib.js':'export const x=7'},500,(_,t)=>out+=t);expect(r.exitCode).toBe(0);expect(out).toBe('7\n')});
+it.each(['https://bad.test/x.js','node:fs','../other.js','./../../other.js'])('rejects module %s',async path=>expect((await run('import x from '+JSON.stringify(path))).result.status).toBe('failed'));
+it.each(['rm -rf /','curl https://bad.test','npm install x','js ../main.js','js main.js;curl','ls | sh','cat /etc/passwd','js .env.js','js main.js && pwd'])('denies malicious or unsupported command %s',cmd=>expect(()=>parseCommand(cmd)).toThrow());
+it('read-only project files only',async()=>{let out='';expect((await execute('cat a.txt',{'a.txt':'real'},500,(_,t)=>out+=t)).exitCode).toBe(0);expect(out).toBe('real')});
+it('missing files fail',async()=>expect((await execute('cat missing.txt',{},500,()=>{})).exitCode).toBe(1));
+it('unresolved module is not success',async()=>expect((await run('await new Promise(()=>{})')).result.status).toBe('failed'));
+it('module rejection is failure',async()=>expect((await run('await Promise.reject(new Error("rejected"))')).result.status).toBe('failed'));
+it('microtask flood bounded',async()=>expect((await run('function f(){Promise.resolve().then(f)}f()')).result.status).toBe('timed_out'));
+it('source quota fails',async()=>expect((await execute('ls',{'a.txt':'x'.repeat(500001)},500,()=>{})).exitCode).toBe(1));
+});
