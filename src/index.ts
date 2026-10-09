@@ -1,3 +1,4 @@
+import {buildApi} from './build-api';
 import {terminalApi} from './terminal-api';
 import {editorApi} from './editor-api';
 import {codingAgentApi,verifyAgentApproval} from './coding-agent-api';
@@ -14,6 +15,7 @@ async function route(req:Request,env:Env):Promise<Response>{
  if(path==='/api/auth/login'&&method==='POST')return authenticate(req,env,false);
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
  if(method!=='GET')await rateLimit(req,env,'writes',60);
+ const buildResponse=await buildApi(req,env,who);if(buildResponse)return buildResponse;
  const terminalResponse=await terminalApi(req,env,who);if(terminalResponse)return terminalResponse;
  const editorResponse=await editorApi(req,env,who);if(editorResponse)return editorResponse;
  const agentResponse=await codingAgentApi(req,env,who);if(agentResponse)return agentResponse;
