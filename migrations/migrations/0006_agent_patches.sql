@@ -1,0 +1,2 @@
+CREATE TABLE agent_patches(proposal_id TEXT PRIMARY KEY REFERENCES proposals(id) ON DELETE CASCADE,patch_digest TEXT NOT NULL,source_digest TEXT NOT NULL,changes_json TEXT NOT NULL CHECK(length(CAST(changes_json AS BLOB))<=200000),destructive INTEGER NOT NULL CHECK(destructive IN (0,1)));
+CREATE TRIGGER agent_patch_immutable BEFORE UPDATE ON agent_patches BEGIN SELECT RAISE(ABORT,'immutable_agent_patch'); END;
