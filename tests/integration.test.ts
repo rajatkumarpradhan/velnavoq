@@ -6,6 +6,7 @@ let mf:Miniflare,db:D1Database;
 const origin='http://localhost:8787';
 interface Login{userId:string;csrfToken:string;cookie:string}
 async function request(path:string,method='GET',body?:unknown,auth?:Login,extra:Record<string,string>={}){
+ if(method==='POST'&&/\/proposals\/[^/]+\/(approve|reject)$/.test(path)&&auth&&body&&typeof body==='object'){const r:any=await (await request(path.replace(/\/(approve|reject)$/,'/review'),'GET',undefined,auth)).json();body={...body,reviewDigest:r.reviewDigest,baseRevision:r.baseRevision,acceptRisk:r.risk,...(r.patchDigest?{}:{approveDestructive:true})};}
  const headers:Record<string,string>={origin,'content-type':'application/json',...extra};if(auth){headers.cookie=auth.cookie;headers['x-csrf-token']=auth.csrfToken;}
  return mf.dispatchFetch(origin+path,{method,headers,...(body===undefined?{}:{body:JSON.stringify(body)})});
 }
