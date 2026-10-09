@@ -17,6 +17,7 @@ with tempfile.TemporaryDirectory() as t:
  c.executescript(migrations[3].read_text())
  assert c.execute('SELECT count(*) FROM file_versions').fetchone()[0]==2
  for migration in migrations[4:]:c.executescript(migration.read_text())
+ c.execute("INSERT INTO agent_patches VALUES('proposal','patch-digest','source-digest','[]',0)")
  # Relationships only: lifecycle metadata is not evidence that a runner or deploy exists.
  c.execute("INSERT INTO jobs VALUES('job','project',1,'local-test','schema-restore-test','queued',3)")
  c.execute("INSERT INTO job_events VALUES('job',1,'queued','test metadata',3)")
@@ -44,7 +45,7 @@ with tempfile.TemporaryDirectory() as t:
  try:d.execute("DELETE FROM memberships WHERE user_id='local-test'");raise AssertionError('last owner bypass')
  except sqlite3.IntegrityError:pass
  d.execute("DELETE FROM projects WHERE id='project'")
- for table in ['project_versions','files','file_versions','jobs','job_events','artifacts','approvals','proposals','source_revisions','releases','deployments','environment_variables','secrets_metadata','mcp_connections','mcp_permissions']:
+ for table in ['project_versions','files','file_versions','jobs','job_events','artifacts','approvals','proposals','source_revisions','releases','deployments','environment_variables','secrets_metadata','mcp_connections','mcp_permissions','agent_patches']:
   assert d.execute('SELECT count(*) FROM '+table).fetchone()[0]==0,table
  assert not d.execute('PRAGMA foreign_key_check').fetchall()
  a.close();b.close();d.close();print('PASS: populated migration upgrade, exact binary and SQL restore, integrity/FKs, private mode, restored triggers and full deletion graph')
