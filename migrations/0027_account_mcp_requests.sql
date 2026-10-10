@@ -1,0 +1,8 @@
+ALTER TABLE account_mcp_projects ADD COLUMN derivation INTEGER NOT NULL DEFAULT 0 CHECK(derivation IN(0,1));
+CREATE TABLE account_mcp_requests(id TEXT PRIMARY KEY,token_id TEXT NOT NULL REFERENCES account_mcp_tokens(id),kind TEXT NOT NULL CHECK(kind IN('access','create')),params_json TEXT NOT NULL,digest TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN('pending','approved','denied')),project_id TEXT,created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL);
+CREATE INDEX account_request_token ON account_mcp_requests(token_id,status,expires_at);
+CREATE TRIGGER account_request_immutable BEFORE UPDATE ON account_mcp_requests WHEN OLD.status!='pending' OR NEW.id!=OLD.id OR NEW.token_id!=OLD.token_id OR NEW.kind!=OLD.kind OR NEW.params_json!=OLD.params_json OR NEW.digest!=OLD.digest OR NEW.created_at!=OLD.created_at OR NEW.expires_at!=OLD.expires_at BEGIN SELECT RAISE(ABORT,'request_immutable'); END;
+CREATE TABLE account_mcp_request_claims(request_id TEXT PRIMARY KEY REFERENCES account_mcp_requests(id));
+CREATE TRIGGER account_request_claim_gate BEFORE INSERT ON account_mcp_request_claims WHEN NOT EXISTS(SELECT 1 FROM account_mcp_requests r JOIN account_mcp_tokens t ON t.id=r.token_id WHERE r.id=NEW.request_id AND r.status='pending' AND r.expires_at>CAST((julianday('now')-2440587.5)*86400000 AS INTEGER) AND t.revoked_at IS NULL AND t.expires_at>CAST((julianday('now')-2440587.5)*86400000 AS INTEGER)) BEGIN SELECT RAISE(ABORT,'request_expired_or_changed'); END;
+ALTER TABLE account_mcp_consents ADD COLUMN request_approvals INTEGER NOT NULL DEFAULT 0 CHECK(request_approvals IN(0,1));
+ALTER TABLE account_mcp_tokens ADD COLUMN request_approvals INTEGER NOT NULL DEFAULT 0 CHECK(request_approvals IN(0,1));
