@@ -1,0 +1,1 @@
+export function oauthResume(hash:string,origin:string){const value=new URLSearchParams(hash.split('?')[1]||'').get('oauthResume');if(!value||value.length>8192)return null;try{const u=new URL(value,origin);return u.origin===origin&&u.pathname==='/oauth/account/authorize'&&!u.hash?u.href:null}catch{return null}}
