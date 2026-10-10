@@ -1,3 +1,4 @@
+import {observabilityApi,observeRequest} from './observability';
 import {deploymentApi} from './deployment';
 import {versioningApi} from './versioning';
 import {environmentApi,rejectEnvironmentLeak} from './project-environment';
@@ -21,7 +22,7 @@ async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>
  if(path==='/api/health'&&method==='GET')return Response.json({service:'velnavoq-control',status:'ok',runtime:'disabled',supportedStack:'static-web-v1'});
  if(path==='/api/auth/register'&&method==='POST')return authenticate(req,env,true);
  if(path==='/api/auth/login'&&method==='POST')return authenticate(req,env,false);
- const who=await identity(req,env,!['GET','HEAD'].includes(method));
+ const who=await identity(req,env,!['GET','HEAD'].includes(method));const scope=/^\/api\/projects\/([^/]+)/.exec(path);if(scope){await project(env,who.userId,scope[1]!);env.OBS_PROJECT_ID=scope[1]!;}const observed=await observabilityApi(req,env,who);if(observed)return observed;
  if(method!=='GET')await rateLimit(req,env,'writes',60);
  if(!['GET','HEAD'].includes(method)&&!path.includes('/environment')&&req.headers.get('content-type')?.startsWith('application/json')){let target=/^\/api\/projects\/([^/]+)/.exec(path)?.[1];const proposalId=/^\/api\/proposals\/([^/]+)/.exec(path)?.[1];if(proposalId)target=(await env.DB.prepare('SELECT project_id FROM proposals WHERE id=?').bind(proposalId).first<{project_id:string}>())?.project_id;if(target){await project(env,who.userId,target);await rejectEnvironmentLeak(env,target,canonical(await readBody(req.clone())))}}const shipping=await deploymentApi(req,env,who,ctx);if(shipping)return shipping;const versioning=await versioningApi(req,env,who);if(versioning)return versioning;const environment=await environmentApi(req,env,who);if(environment)return environment;const clientFlow=await oauthClient(req,env,who);if(clientFlow)return clientFlow;const human=await humanApproval(req,env,who);if(human)return human;const mcpManagement=await mcpManage(req,env,who);if(mcpManagement)return mcpManagement;
  const repairResponse=await repairApi(req,env,who);if(repairResponse)return repairResponse;
@@ -61,7 +62,7 @@ async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>
  throw new ApiError(404,'not_found');
 }
 export default {async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
- const requestId=crypto.randomUUID();let res:Response;
- try{res=await route(req,env,ctx);}catch(e){if(e instanceof ApiError)res=Response.json({error:e.code,requestId},{status:e.status});else{console.error(JSON.stringify({requestId,error:'internal_error'}));res=Response.json({error:'internal_error',requestId},{status:500});}}
- const h=new Headers(res.headers);h.set('cache-control','no-store');h.set('x-content-type-options','nosniff');h.set('permissions-policy','camera=(), microphone=(), geolocation=(), payment=()');h.set('referrer-policy','no-referrer');h.set('x-request-id',requestId);h.set('content-security-policy',"default-src 'none'; frame-ancestors 'none'");return new Response(res.body,{status:res.status,headers:h});
+ const requestId=crypto.randomUUID(),started=Date.now();env={...env,OBS_REQUEST_ID:requestId};let res:Response;
+ try{res=await route(req,env,ctx);}catch(e){if(e instanceof ApiError)res=Response.json({error:e.code,requestId},{status:e.status});else{res=Response.json({error:'internal_error',requestId},{status:500});}}
+ const stored=await observeRequest(env,req,res,started);const h=new Headers(res.headers);if(!stored)h.set('x-observability-status','unavailable');h.set('cache-control','no-store');h.set('x-content-type-options','nosniff');h.set('permissions-policy','camera=(), microphone=(), geolocation=(), payment=()');h.set('referrer-policy','no-referrer');h.set('x-request-id',requestId);h.set('content-security-policy',"default-src 'none'; frame-ancestors 'none'");return new Response(res.body,{status:res.status,headers:h});
 }};
