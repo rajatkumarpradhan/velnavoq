@@ -1,0 +1,7 @@
+```json
+[
+  {
+    "path": "index.html",
+    "operation": "CREATE",
+    "previousDigest": null,
+    "content": "<!doctype html><html><body><h1>Assignment tra
