@@ -42,7 +42,7 @@ export async function restoreExport(env:Env,who:Identity,workspaceId:string,x:Pr
  await checkGauge(env,'storage.bytes.user',who.userId,x.manifest.totalBytes,now);
  void userStorage;void workspaceStorage;
  const id=crypto.randomUUID(),name=cleanName(x.project.name),top=x.versions.length;
- const st=[env.DB.prepare('INSERT INTO projects(id,workspace_id,name,created_at,created_by) VALUES(?,?,?,?,?)').bind(id,workspaceId,name,now,who.userId)];
+ const st=[env.DB.prepare('INSERT INTO projects(id,workspace_id,name,created_at,created_by) VALUES(?,?,?,?,?)').bind(id,workspaceId,name,now,who.userId),env.DB.prepare('INSERT INTO ai_budgets(project_id,token_limit) VALUES(?,?)').bind(id,40000)];
  for(const v of x.versions){const pid=crypto.randomUUID();
   st.push(env.DB.prepare('INSERT INTO proposals(id,project_id,base_revision,digest,bundle_json,author_id,created_at) VALUES(?,?,?,?,?,?,?)').bind(pid,id,v.revision-1,v.digest,v.bundle,who.userId,now));
   // The existing approval triggers write source_revisions, approvals, file_versions and bump projects.revision, so a restored history is built exactly like a live one.
