@@ -1,0 +1,13 @@
+```json
+[
+  {
+    "path": "index.html",
+    "operation": "CREATE",
+    "previousDigest": null,
+    "content": "<!doctype html><html><body><h1>Assignment tracker</h1><script src=\"app.js\"></script></body></html>",
+    "to": null,
+    "reason": "Create the requested page markup",
+    "risk": "low"
+  }
+]
+```
