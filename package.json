@@ -10,7 +10,7 @@
     "check": "npm run typecheck && npm test && npm audit --audit-level=high",
     "dev": "wrangler dev --local",
     "migrate:local": "wrangler d1 migrations apply velnavoq-control --local",
-    "build": "wrangler deploy --dry-run --outdir dist",
+    "build": "npm run ui:build && wrangler deploy --dry-run --outdir dist",
     "ui:dev": "vite",
     "ui:build": "tsc -p ui/tsconfig.json && vite build",
     "ui:test": "node scripts/ui-check.mjs",
