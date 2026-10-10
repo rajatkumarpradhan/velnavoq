@@ -18,6 +18,11 @@ import {authenticate,identity,project,rateLimit,role} from './auth';
 import {canonical,digest,readBody,validateBundle,validateName} from './security';
 async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
  const url=new URL(req.url),path=url.pathname,method=req.method;
+ if(!['GET','HEAD','POST','PUT','PATCH','DELETE'].includes(method))throw new ApiError(405,'method_denied');
+ if(url.href.length>8192)throw new ApiError(414,'request_target_too_long');
+ // Bound every read, including public metadata and telemetry-triggering failures.
+ if(['GET','HEAD'].includes(method))await rateLimit(req,env,'reads',240);
+ else await rateLimit(req,env,'incoming-writes',120);
  if(path==='/oauth/callback'){const callback=await oauthClient(req,env);if(callback)return callback;}const oauth=await oauthPublic(req,env);if(oauth)return oauth;const mcp=await mcpEndpoint(req,env);if(mcp)return mcp;
  if(path==='/api/health'&&method==='GET')return Response.json({service:'velnavoq-control',status:'ok',runtime:'disabled',supportedStack:'static-web-v1'});
  if(path==='/api/auth/register'&&method==='POST')return authenticate(req,env,true);
