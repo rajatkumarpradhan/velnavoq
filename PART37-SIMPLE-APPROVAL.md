@@ -1,0 +1,9 @@
+# Part37: Simple exact source approval
+
+Reported issue: checkbox ticked but Approve disabled. Source had hidden blockers: any proposed file over500 lines, stale revision, unsaved editor state, owner status. Reject/Cancel active excluded owner status. Actual live exact branch not read, but500-line cap is a confirmed UI defect.
+
+Latest user request: simple Torvane-like one card, short summary, one approve tap. Review now shows changed file names, add/change/delete, proposed line/byte counts, base/current revision, permissions/schema count, risk and source-only effect. One Approve exact patch tap sends same immutable proposal/review/patch digests and exact base revision/risk; high-risk button explicitly includes deletions/renames and sends that acknowledgement. No checkbox or compulsory diff-page traversal. No auto-approval by AI.
+
+Optional View full details and diff expands complete positional before/after comparison in500-line pages, including old deleted files. No missing lines, no file-size approval blocker. Server caps unchanged:50 files,500KB total source,550KB JSON body; unsafe paths/secrets refused. Files with thousands of lines are supported within existing byte limits. Stale, unsaved and non-owner blockers display reasons next to approval. Server rechecks stale/digests/risk/owner transaction. Approval only source, not migration, code execution or deploy.
+
+No migration/backend/target change. Control/UI rebuild with existing bindings/signup settings. Mobile local fixture with2501-line CSS plus HTML/JS: approval enabled immediately, optional page2 exposes line501, one click sends exact digests/risk. Synthetic UI evidence, not live user's proposal approval. Tests retain server approval safety and MCP isolation. Real user's existing proposal should remain pending until he taps.
