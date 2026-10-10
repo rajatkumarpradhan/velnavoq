@@ -15,7 +15,9 @@
     "ui:build": "tsc -p ui/tsconfig.json && vite build",
     "ui:test": "node scripts/ui-check.mjs",
     "navigation:test": "npm run build && node scripts/navigation-check.mjs",
-    "target:build": "wrangler deploy --config deployment-target/wrangler.jsonc --dry-run --outdir ../target-dist"
+    "target:build": "wrangler deploy --config deployment-target/wrangler.jsonc --dry-run --outdir ../target-dist",
+    "qa": "node scripts/qa-run.mjs all",
+    "qa:report": "node scripts/qa-run.mjs report"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
