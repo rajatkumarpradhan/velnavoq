@@ -119,10 +119,12 @@ export async function mfaApi(req:Request,env:Env,who:Identity):Promise<Response|
  if(path==='/api/auth/mfa/disable'&&method==='POST'){
   await rateLimit(req,env,'mfa-manage',10);
   const b=await readBody(req);
-  if(Object.keys(b).sort().join(',')!=='code,password'&&Object.keys(b).sort().join(',')!=='password,recoveryCode')throw new ApiError(400,'mfa_disable_fields_denied');
-  const password=validatePassword(b.password);
+  const keys=Object.keys(b).sort().join(',');
+  const clientKdf='verifier' in b;
+  if(!(clientKdf?['code,verifier','recoveryCode,verifier']:['code,password','password,recoveryCode']).includes(keys))throw new ApiError(400,'mfa_disable_fields_denied');
   const u=await env.DB.prepare('SELECT password_hash,password_salt FROM users WHERE id=?').bind(who.userId).first<{password_hash:string;password_salt:string}>();
-  if(!u||!constantEqual(await passwordHash(password,u.password_salt),u.password_hash))throw new ApiError(401,'invalid_credentials');
+  if(clientKdf){if(typeof b.verifier!=='string'||!/^[0-9a-f]{64}$/.test(b.verifier))throw new ApiError(400,'invalid_verifier');const {verifierHash,userKdf}=await import('./client-auth');if(!u||await userKdf(env,who.userId)!=='client-v1'||!constantEqual(await verifierHash(u.password_salt,b.verifier),u.password_hash))throw new ApiError(401,'invalid_credentials')}
+  else{const password=validatePassword(b.password);if(!u||!constantEqual(await passwordHash(password,u.password_salt),u.password_hash))throw new ApiError(401,'invalid_credentials')}
   if(!await mfaActive(env,who.userId))throw new ApiError(409,'mfa_not_enabled');
   let ok=false;
   if(typeof b.recoveryCode==='string')ok=await useRecoveryCode(env,who.userId,b.recoveryCode);
