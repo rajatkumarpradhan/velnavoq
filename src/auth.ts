@@ -1,6 +1,6 @@
 import {assertSignInAllowed,recordSignInFailure,clearSignInFailures} from './quota';import {ApiError,type Env,type Identity,type Project,type Role} from './contracts';
 import {checkOrigin,constantEqual,digest,passwordHash,randomToken,readBody,validateEmail,validatePassword,validateNewPassword,sessionToken} from './security';
-const lifetime=86400,idle=1800,idleRefresh=60;
+export const SESSION_SECONDS=30*86400;const lifetime=SESSION_SECONDS,idle=0,idleRefresh=60;
 export const IDLE_SECONDS=idle;
 export async function rateLimit(req:Request,env:Env,scope:string,limit=10):Promise<void>{
  const address=req.headers.get('CF-Connecting-IP');if(!address&&new URL(env.APP_ORIGIN).hostname!=='localhost')throw new ApiError(503,'trusted_client_ip_missing');
@@ -11,12 +11,13 @@ export async function rateLimit(req:Request,env:Env,scope:string,limit=10):Promi
  if(!row||row.count>limit)throw new ApiError(429,'rate_limited');
 }
 export async function identity(req:Request,env:Env,write=false):Promise<Identity>{
- const token=sessionToken(req),sessionHash=await digest(token);
+ const token=sessionToken(req);let sessionHash=await digest(token);
  const now=Math.floor(Date.now()/1000);
+ const alias=await env.DB.prepare('SELECT new_hash FROM session_rotation_aliases WHERE old_hash=? AND expires_at>?').bind(sessionHash,now).first<{new_hash:string}>();if(alias)sessionHash=alias.new_hash;
  const s=await env.DB.prepare('SELECT user_id,csrf_hash,last_seen_at,created_at FROM sessions WHERE token_hash=? AND expires_at>?').bind(sessionHash,now).first<{user_id:string;csrf_hash:string;last_seen_at:number;created_at:number}>();
  if(!s)throw new ApiError(401,'session_expired_or_revoked');
  const lastSeen=s.last_seen_at||s.created_at;
- if(now-lastSeen>idle){await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(sessionHash).run();throw new ApiError(401,'session_idle_expired');}
+ 
  if(now-lastSeen>=idleRefresh)await env.DB.prepare('UPDATE sessions SET last_seen_at=? WHERE token_hash=?').bind(now,sessionHash).run();
  if(write){checkOrigin(req,env.APP_ORIGIN);if(!constantEqual(await digest(req.headers.get('x-csrf-token')||''),s.csrf_hash))throw new ApiError(403,'csrf_denied');}
  return {userId:s.user_id,sessionHash,csrfHash:s.csrf_hash};
@@ -49,7 +50,7 @@ export async function issueSession(env:Env,userId:string,oldHash:string|null=nul
  const token=randomToken(),csrf=randomToken(),now=Math.floor(Date.now()/1000);
  const create=env.DB.prepare('INSERT INTO sessions(token_hash,user_id,csrf_hash,expires_at,created_at,last_seen_at) VALUES(?,?,?,?,?,?)').bind(await digest(token),userId,await digest(csrf),now+lifetime,now,now);
  if(oldHash)await env.DB.batch([env.DB.prepare('DELETE FROM sessions WHERE token_hash=? AND user_id=?').bind(oldHash,userId),create]);else await create.run();
- const headers=new Headers();headers.append('set-cookie',`__Host-velnavoq_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${lifetime}`);headers.append('set-cookie',`__Host-velnavoq_csrf=${csrf}; Secure; SameSite=Strict; Path=/; Max-Age=${lifetime}`);return Response.json({userId,csrfToken:csrf,expiresAt:now+lifetime,idleExpiresAt:now+idle},{headers});
+ const headers=new Headers();headers.append('set-cookie',`__Host-velnavoq_session=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${lifetime}`);headers.append('set-cookie',`__Host-velnavoq_csrf=${csrf}; Secure; SameSite=Lax; Path=/; Max-Age=${lifetime}`);return Response.json({userId,csrfToken:csrf,expiresAt:now+lifetime,idleExpiresAt:null},{headers});
 }
 
 /** Local reference identity only. Exact old/new password, transactional session termination. */
@@ -77,6 +78,8 @@ export async function changePassword(req:Request,env:Env,who:Identity):Promise<R
  }
  // Optimistic old-hash guard makes concurrent password changes fail atomically.
  await env.DB.batch([env.DB.prepare('UPDATE users SET password_hash=?,password_salt=? WHERE id=? AND password_hash=?').bind(hash,salt,who.userId,u.password_hash),setKdf(env,who.userId,clientKdf),env.DB.prepare('INSERT INTO password_change_guard(user_id,expected_hash) VALUES(?,?)').bind(who.userId,hash),env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(who.userId),env.DB.prepare('DELETE FROM password_change_guard WHERE user_id=?').bind(who.userId)]);
- const headers=new Headers();for(const name of ['__Host-velnavoq_session','__Host-velnavoq_csrf'])headers.append('set-cookie',name+'=; Secure; SameSite=Strict; Path=/; Max-Age=0'+(name.endsWith('session')?'; HttpOnly':''));
+ const headers=new Headers();for(const name of ['__Host-velnavoq_session','__Host-velnavoq_csrf'])headers.append('set-cookie',name+'=; Secure; SameSite=Lax; Path=/; Max-Age=0'+(name.endsWith('session')?'; HttpOnly':''));
  return Response.json({changed:true,reauthenticationRequired:true},{headers});
 }
+
+export async function renewSession(req:Request,env:Env,who:Identity){const now=Math.floor(Date.now()/1000),csrf=req.headers.get('x-csrf-token')!,raw=randomToken(),hash=await digest(raw);const row=await env.DB.prepare('SELECT created_at,expires_at FROM sessions WHERE token_hash=?').bind(who.sessionHash).first<{created_at:number;expires_at:number}>();if(!row)throw new ApiError(401,'session_expired_or_revoked');if(now-row.created_at<86400)return Response.json({expiresAt:row.expires_at,rotated:false});let result:D1Result[];try{result=await env.DB.batch([env.DB.prepare('DELETE FROM session_rotation_aliases WHERE expires_at<?').bind(now),env.DB.prepare('UPDATE sessions SET token_hash=?,created_at=?,last_seen_at=?,expires_at=? WHERE token_hash=? AND created_at=?').bind(hash,now,now,now+lifetime,who.sessionHash,row.created_at),env.DB.prepare('INSERT INTO session_rotation_aliases(old_hash,new_hash,expires_at) VALUES(?,?,?)').bind(who.sessionHash,hash,now+30),env.DB.prepare("UPDATE oauth_client_flows SET session_hash=? WHERE session_hash=? AND user_id=? AND status='pending'").bind(hash,who.sessionHash,who.userId)])}catch{throw new ApiError(409,'session_rotation_changed')}if(!result[1]!.meta.changes)throw new ApiError(409,'session_rotation_changed');const h=new Headers();h.append('set-cookie',`__Host-velnavoq_session=${raw}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${lifetime}`);h.append('set-cookie',`__Host-velnavoq_csrf=${csrf}; Secure; SameSite=Lax; Path=/; Max-Age=${lifetime}`);return Response.json({expiresAt:now+lifetime,rotated:true},{headers:h});}
