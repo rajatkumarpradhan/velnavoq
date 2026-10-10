@@ -1,3 +1,4 @@
+import {publicMcpPath,publicCors} from './public-mcp-http';
 import {accountPublic,accountManage,accountEndpoint} from './account-mcp';
 import {backendApi} from './project-backend';
 import {observabilityApi,observeRequest} from './observability';
@@ -22,12 +23,13 @@ import {accountRecoveryApi} from './account-recovery';import {clientAuthenticate
 import {canonical,digest,readBody,validateBundle,validateName} from './security';
 async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
  const url=new URL(req.url),path=url.pathname,method=req.method;
+ if(method==='OPTIONS'&&publicMcpPath(path))return new Response(null,{status:204});
  if(!['GET','HEAD','POST','PUT','PATCH','DELETE'].includes(method))throw new ApiError(405,'method_denied');
  if(url.href.length>8192)throw new ApiError(414,'request_target_too_long');
  // Bound every read, including public metadata and telemetry-triggering failures.
  if(['GET','HEAD'].includes(method))await rateLimit(req,env,'reads',240);
  else await rateLimit(req,env,'incoming-writes',120);
- const accountOAuth=await accountPublic(req,env);if(accountOAuth)return accountOAuth;const accountRpc=await accountEndpoint(req,env);if(accountRpc)return accountRpc;if(path==='/oauth/callback'){const callback=await oauthClient(req,env);if(callback)return callback;}const oauth=await oauthPublic(req,env);if(oauth)return oauth;const mcp=await mcpEndpoint(req,env);if(mcp)return mcp;
+ const accountOAuth=await accountPublic(req,env);if(accountOAuth)return accountOAuth;if(path.startsWith('/.well-known/')&&!/^\/\.well-known\/(?:oauth-protected-resource\/mcp\/projects|oauth-authorization-server\/oauth\/projects)\/[^/]+$/.test(path))throw new ApiError(404,'not_found');const accountRpc=await accountEndpoint(req,env);if(accountRpc)return accountRpc;if(path==='/oauth/callback'){const callback=await oauthClient(req,env);if(callback)return callback;}const oauth=await oauthPublic(req,env);if(oauth)return oauth;if(path.startsWith('/.well-known/'))throw new ApiError(404,'not_found');const mcp=await mcpEndpoint(req,env);if(mcp)return mcp;
  if(path==='/api/health'&&method==='GET')return Response.json({service:'velnavoq-control',status:'ok',runtime:'disabled',supportedStack:'static-web-v1'});
  if(path==='/api/auth/kdf'&&method==='POST')return kdfParams(req,env);
  if((path==='/api/auth/register'||path==='/api/auth/login')&&method==='POST'){const peek=await readBody(req.clone());if('verifier' in peek)return clientAuthenticate(req,env,path.endsWith('register'));return authenticate(req,env,path.endsWith('register'))}
@@ -76,5 +78,5 @@ async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>
 export default {async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
  const requestId=crypto.randomUUID(),started=Date.now();env={...env,OBS_REQUEST_ID:requestId};let res:Response;
  try{res=await route(req,env,ctx);}catch(e){if(e instanceof QuotaError){const h=new Headers();if(e.detail.retryAfterSeconds)h.set('retry-after',String(e.detail.retryAfterSeconds));res=Response.json({error:e.code,...e.detail,requestId},{status:e.status,headers:h});}else if(e instanceof ApiError)res=Response.json({error:e.code,requestId},{status:e.status});else{res=Response.json({error:'internal_error',requestId},{status:500});}}
- const stored=await observeRequest(env,req,res,started);const h=new Headers(res.headers);if(!stored)h.set('x-observability-status','unavailable');h.set('cache-control','no-store');h.set('x-content-type-options','nosniff');h.set('cross-origin-opener-policy','same-origin');h.set('cross-origin-resource-policy','same-origin');h.set('origin-agent-cluster','?1');h.set('permissions-policy','camera=(), microphone=(), geolocation=(), payment=()');h.set('referrer-policy','no-referrer');if(new URL(req.url).protocol==='https:')h.set('strict-transport-security','max-age=31536000; includeSubDomains');h.set('x-request-id',requestId);h.set('content-security-policy',"default-src 'none'; frame-ancestors 'none'");return new Response(res.body,{status:res.status,headers:h});
+ res=publicCors(req,res);const stored=await observeRequest(env,req,res,started);const h=new Headers(res.headers);if(!stored)h.set('x-observability-status','unavailable');h.set('cache-control','no-store');h.set('x-content-type-options','nosniff');h.set('cross-origin-opener-policy','same-origin');h.set('cross-origin-resource-policy','same-origin');h.set('origin-agent-cluster','?1');h.set('permissions-policy','camera=(), microphone=(), geolocation=(), payment=()');h.set('referrer-policy','no-referrer');if(new URL(req.url).protocol==='https:')h.set('strict-transport-security','max-age=31536000; includeSubDomains');h.set('x-request-id',requestId);h.set('content-security-policy',"default-src 'none'; frame-ancestors 'none'");return new Response(res.body,{status:res.status,headers:h});
 }};
