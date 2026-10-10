@@ -1,3 +1,4 @@
+const AccountMcp=lazy(()=>import('./components/account-mcp').then(m=>({default:m.AccountMcp})));
 const ProjectBackend=lazy(()=>import('./components/project-backend').then(m=>({default:m.ProjectBackend})));
 import {isChunkFailure,chunkRecovery} from './chunk-recovery';
 const ProjectAgent=lazy(()=>import('./components/project-agent').then(m=>({default:m.ProjectAgent})));
@@ -30,6 +31,7 @@ else if(route==='agent')content=<Suspense fallback={<Notice>Loading AI workspace
 else if(route==='deployment')content=<Suspense fallback={<Notice>Loading deployment status...</Notice>}><ProjectDeployment key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(['releases','rollback'].includes(route))content=<Suspense fallback={<Notice>Loading immutable versions...</Notice>}><ProjectVersioning key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='environment')content=<Suspense fallback={<Notice>Loading masked environment metadata...</Notice>}><ProjectEnvironment key={nav.selectedProject?.id} nav={nav}/></Suspense>;
+else if(route==='mcp'&&!nav.selectedProject)content=<Suspense fallback={<Notice>Loading connections...</Notice>}><AccountMcp/></Suspense>;
 else if(route==='mcp')content=<Suspense fallback={<Notice>Loading MCP permissions...</Notice>}><ProjectMcp key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='repair')content=<Suspense fallback={<Notice>Loading repair context...</Notice>}><ProjectRepair key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='preview')content=<Suspense fallback={<Notice>Loading preview...</Notice>}><ProjectPreview key={nav.selectedProject?.id} nav={nav}/></Suspense>;
@@ -42,7 +44,7 @@ else if(route==='account')content=<><h1>Your account</h1><Panel title={nav.user?
 else if(route==='settings')content=<><h1>Workspace membership</h1><Members nav={nav}/></>;
 else if(route==='security')content=<><div className="page-title"><div><div className="eyebrow">TRUST / BOUNDARIES</div><h1>Control stays with you.</h1><p>Security is part of the work, not a badge at the end.</p></div></div><Panel title="Architecture boundaries"><div className="status-row"><span>Untrusted code in control plane</span><Badge>Never allowed</Badge></div><div className="status-row"><span>Preview on main app origin</span><Badge>Never allowed</Badge></div><div className="status-row"><span>Model auto-approval</span><Badge>Disabled</Badge></div></Panel></>;
 else content=<><div className="page-title"><div><div className="eyebrow">WORKSPACE / {titleOf(route).toUpperCase()}</div><h1>{titleOf(route)}</h1><p>Clear state. No simulated activity.</p></div></div><ServiceScreen id={route}/></>;
-const protectedRoutes=['backend','mcp','project','agent','editor','review','files','terminal','preview','logs','repair','approval','permissions','environment','deployment','releases','rollback'];
+const protectedRoutes=['backend','project','agent','editor','review','files','terminal','preview','logs','repair','approval','permissions','environment','deployment','releases','rollback'];
 if(protectedRoutes.includes(route)&&!nav.selectedProject)content=<><h1>{titleOf(route)}</h1><Panel><Empty title={nav.state==='anonymous'?'Sign in required':'Select a verified project'} detail="This navigation target needs an authenticated workspace and project returned by the backend."><Button onClick={()=>go(nav.state==='anonymous'?'signin':'projects')}>{nav.state==='anonymous'?'Sign in':'Choose a project'}</Button></Empty></Panel></>;
 if(!['home','signin',...routes.map(r=>r[0])].includes(route))content=<><h1>Page not found</h1><ServiceScreen id="404"/></>;
 return <Shell nav={nav}>{content}</Shell>}
