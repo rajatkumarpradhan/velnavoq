@@ -6,7 +6,7 @@
   "description": "Velnavoq by Drayvenn Lab - isolated app builder control plane",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && vitest run",
+    "test": "npm run build && npm run target:build && vitest run",
     "check": "npm run typecheck && npm test && npm audit --audit-level=high",
     "dev": "wrangler dev --local",
     "migrate:local": "wrangler d1 migrations apply velnavoq-control --local",
@@ -14,7 +14,8 @@
     "ui:dev": "vite",
     "ui:build": "tsc -p ui/tsconfig.json && vite build",
     "ui:test": "node scripts/ui-check.mjs",
-    "navigation:test": "npm run build && node scripts/navigation-check.mjs"
+    "navigation:test": "npm run build && node scripts/navigation-check.mjs",
+    "target:build": "wrangler deploy --config deployment-target/wrangler.jsonc --dry-run --outdir ../target-dist"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
