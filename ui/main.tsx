@@ -45,3 +45,4 @@ if(protectedRoutes.includes(route)&&!nav.selectedProject)content=<><h1>{titleOf(
 if(!['home','signin',...routes.map(r=>r[0])].includes(route))content=<><h1>Page not found</h1><ServiceScreen id="404"/></>;
 return <Shell nav={nav}>{content}</Shell>}
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);
+
