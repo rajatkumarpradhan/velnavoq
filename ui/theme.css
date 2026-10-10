@@ -12,3 +12,5 @@
 .skip:not(:focus){clip-path:inset(50%);width:1px;height:1px;padding:0;overflow:hidden}
 .terminal-output{white-space:pre-wrap;overflow-wrap:anywhere;max-height:420px;overflow:auto;background:#080f16;padding:18px;border:1px solid var(--line);border-radius:12px;min-height:140px;font:13px/1.6 monospace}.terminal-output .stderr{color:#ffa9a9}.job-receipt{padding:14px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}.job-receipt code{white-space:pre-wrap}.job-receipt small{display:block;color:var(--muted)}
 .terminal-body{padding:18px}.terminal-body .field input{width:100%}.terminal-body form{display:grid;gap:14px}
+
+.observation-card{border-top:1px solid var(--line);padding:16px 0;min-width:0}.observation-card code,.observation-timeline code,.observation-id{display:block;white-space:normal;overflow-wrap:anywhere;font-size:12px;line-height:1.6;margin:4px 0 12px}.observation-heading{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.observation-card p,.observation-timeline p{font-size:13px}.observation-timeline{padding-left:24px}.observation-timeline li{padding:12px 0 16px;border-bottom:1px solid var(--line)}
