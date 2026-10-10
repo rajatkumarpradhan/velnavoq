@@ -9,3 +9,6 @@ coverage/
 *.log
 
 ui-dist/
+
+target-dist/
+deployment-target/target-dist/
