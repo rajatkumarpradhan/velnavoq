@@ -1,6 +1,6 @@
 import {assertSignInAllowed,recordSignInFailure,clearSignInFailures} from './quota';import {ApiError,type Env,type Identity,type Project,type Role} from './contracts';
 import {checkOrigin,constantEqual,digest,passwordHash,randomToken,readBody,validateEmail,validatePassword,validateNewPassword,sessionToken} from './security';
-export const SESSION_SECONDS=30*86400;const lifetime=SESSION_SECONDS,idle=0,idleRefresh=60;
+export const SESSION_SECONDS=365*86400;const lifetime=SESSION_SECONDS,idle=0,idleRefresh=60;
 export const IDLE_SECONDS=idle;
 export async function rateLimit(req:Request,env:Env,scope:string,limit=10):Promise<void>{
  const address=req.headers.get('CF-Connecting-IP');if(!address&&new URL(env.APP_ORIGIN).hostname!=='localhost')throw new ApiError(503,'trusted_client_ip_missing');
