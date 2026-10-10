@@ -1,3 +1,4 @@
+import {deploymentApi} from './deployment';
 import {versioningApi} from './versioning';
 import {environmentApi,rejectEnvironmentLeak} from './project-environment';
 import {humanApproval,review} from './human-approval';import {oauthClient} from './oauth-client';
@@ -14,7 +15,7 @@ import {tenancy} from './tenancy';
 import {ApiError,type Env,type Proposal} from './contracts';
 import {authenticate,identity,project,rateLimit,role} from './auth';
 import {canonical,digest,readBody,validateBundle,validateName} from './security';
-async function route(req:Request,env:Env):Promise<Response>{
+async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
  const url=new URL(req.url),path=url.pathname,method=req.method;
  if(path==='/oauth/callback'){const callback=await oauthClient(req,env);if(callback)return callback;}const oauth=await oauthPublic(req,env);if(oauth)return oauth;const mcp=await mcpEndpoint(req,env);if(mcp)return mcp;
  if(path==='/api/health'&&method==='GET')return Response.json({service:'velnavoq-control',status:'ok',runtime:'disabled',supportedStack:'static-web-v1'});
@@ -22,7 +23,7 @@ async function route(req:Request,env:Env):Promise<Response>{
  if(path==='/api/auth/login'&&method==='POST')return authenticate(req,env,false);
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
  if(method!=='GET')await rateLimit(req,env,'writes',60);
- if(!['GET','HEAD'].includes(method)&&!path.includes('/environment')&&req.headers.get('content-type')?.startsWith('application/json')){let target=/^\/api\/projects\/([^/]+)/.exec(path)?.[1];const proposalId=/^\/api\/proposals\/([^/]+)/.exec(path)?.[1];if(proposalId)target=(await env.DB.prepare('SELECT project_id FROM proposals WHERE id=?').bind(proposalId).first<{project_id:string}>())?.project_id;if(target){await project(env,who.userId,target);await rejectEnvironmentLeak(env,target,canonical(await readBody(req.clone())))}}const versioning=await versioningApi(req,env,who);if(versioning)return versioning;const environment=await environmentApi(req,env,who);if(environment)return environment;const clientFlow=await oauthClient(req,env,who);if(clientFlow)return clientFlow;const human=await humanApproval(req,env,who);if(human)return human;const mcpManagement=await mcpManage(req,env,who);if(mcpManagement)return mcpManagement;
+ if(!['GET','HEAD'].includes(method)&&!path.includes('/environment')&&req.headers.get('content-type')?.startsWith('application/json')){let target=/^\/api\/projects\/([^/]+)/.exec(path)?.[1];const proposalId=/^\/api\/proposals\/([^/]+)/.exec(path)?.[1];if(proposalId)target=(await env.DB.prepare('SELECT project_id FROM proposals WHERE id=?').bind(proposalId).first<{project_id:string}>())?.project_id;if(target){await project(env,who.userId,target);await rejectEnvironmentLeak(env,target,canonical(await readBody(req.clone())))}}const shipping=await deploymentApi(req,env,who,ctx);if(shipping)return shipping;const versioning=await versioningApi(req,env,who);if(versioning)return versioning;const environment=await environmentApi(req,env,who);if(environment)return environment;const clientFlow=await oauthClient(req,env,who);if(clientFlow)return clientFlow;const human=await humanApproval(req,env,who);if(human)return human;const mcpManagement=await mcpManage(req,env,who);if(mcpManagement)return mcpManagement;
  const repairResponse=await repairApi(req,env,who);if(repairResponse)return repairResponse;
  const previewResponse=await previewApi(req,env,who);if(previewResponse)return previewResponse;
  const buildResponse=await buildApi(req,env,who);if(buildResponse)return buildResponse;
@@ -59,8 +60,8 @@ async function route(req:Request,env:Env):Promise<Response>{
  try{const results=await env.DB.batch([env.DB.prepare('UPDATE proposals SET status=?,approved_by=?,decided_at=? WHERE id=? AND status=?').bind(desired,who.userId,Date.now(),proposal.id,'pending'),env.DB.prepare('INSERT INTO human_review_audit(proposal_id,project_id,actor_id,decision,proposal_digest,review_digest,base_revision,created_at) VALUES(?,?,?,?,?,?,?,?)').bind(proposal.id,p.id,who.userId,decision[2],proposal.digest,manifest.reviewDigest,proposal.base_revision,Date.now())]);if(!results[0]!.meta.changes)throw new ApiError(409,'proposal_changed');}catch(e){if(e instanceof ApiError)throw e;throw new ApiError(409,'atomic_approval_conflict');}return Response.json({status:desired});}}
  throw new ApiError(404,'not_found');
 }
-export default {async fetch(req:Request,env:Env):Promise<Response>{
+export default {async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
  const requestId=crypto.randomUUID();let res:Response;
- try{res=await route(req,env);}catch(e){if(e instanceof ApiError)res=Response.json({error:e.code,requestId},{status:e.status});else{console.error(JSON.stringify({requestId,error:'internal_error'}));res=Response.json({error:'internal_error',requestId},{status:500});}}
+ try{res=await route(req,env,ctx);}catch(e){if(e instanceof ApiError)res=Response.json({error:e.code,requestId},{status:e.status});else{console.error(JSON.stringify({requestId,error:'internal_error'}));res=Response.json({error:'internal_error',requestId},{status:500});}}
  const h=new Headers(res.headers);h.set('cache-control','no-store');h.set('x-content-type-options','nosniff');h.set('permissions-policy','camera=(), microphone=(), geolocation=(), payment=()');h.set('referrer-policy','no-referrer');h.set('x-request-id',requestId);h.set('content-security-policy',"default-src 'none'; frame-ancestors 'none'");return new Response(res.body,{status:res.status,headers:h});
 }};
