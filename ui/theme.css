@@ -33,3 +33,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto;overflow-wrap:anywhere}.dial
 footer a{min-height:44px;display:flex;align-items:center}footer{align-items:center;flex-wrap:wrap}
 .destructive-confirm{min-height:44px}.destructive-confirm input{flex-shrink:0;min-height:24px;height:24px}
 @media(max-width:760px){.global{min-height:68px}.header-actions{flex-wrap:wrap}.header-actions .button{min-width:44px}.hero h1{font-size:clamp(36px,11vw,65px)}.status-row,.limit-row,.property-list>div,.panel-head{flex-wrap:wrap}.badge{white-space:normal}.project-workbench>.panel{padding:14px}.project-workbench .panel-head{margin:-14px -14px 14px}.inline-actions{padding:16px;gap:10px}.editor-status{padding:12px 4px}}
+
+.quota-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--line);font-size:12px}.quota-row:last-child{border:0}.quota-text{display:grid;gap:4px;min-width:0}.quota-text small{font-size:11px}.quota-meter{display:grid;gap:6px;justify-items:end;min-width:180px}.quota-meter progress{width:100%;height:8px;accent-color:var(--accent)}.quota-meter code{font-size:11px;color:var(--muted)}
+@media(max-width:760px){.quota-row{flex-direction:column;align-items:stretch;padding:16px}.quota-meter{justify-items:start;min-width:0}}
+.page-title~.panel{margin-bottom:16px}
