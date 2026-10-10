@@ -110,4 +110,6 @@ Deliverables should name the assessed commit/environment/date, coverage and excl
 
 ## Requirement-level gate added after Part20
 
-See [ASVS-SELF-ASSESSMENT.md](./ASVS-SELF-ASSESSMENT.md) and its editable CSV. Exact official inventory is 345 rows, including 70 L1 and 183 additional L2. Source/local self-assessment has 12 L1 failures/16 L1 not-verified and 17 additional L2 failures/85 additional L2 not-verified. No full level passes. Implement and retest failed controls, then gather the missing deployment/operator evidence before any assurance claim. A source-level pass in a row is not a production attestation.
+See [ASVS-SELF-ASSESSMENT.md](./ASVS-SELF-ASSESSMENT.md) and its editable CSV. Exact official inventory is 345 rows, including 70 L1 and 183 additional L2. After approved local remediation, self-assessment has 3 L1 failures/18 L1 not-verified and 16 additional L2 failures/85 additional L2 not-verified. Cumulative L1+L2: 72 local passes, 19 fails, 59 N/A, 103 not verified. No full level passes. Implement and retest failed controls, then gather the missing deployment/operator evidence before any assurance claim. A source-level pass in a row is not a production attestation.
+
+Follow-up code verification: 382 backend tests/19 files pass, TypeScript/both dry-runs/npm audit zero, UI build and 18 real password-change browser checks pass. Historical 367-test Part20 evidence above remains labeled as its original snapshot. See SECURITY-REMEDIATION.md for current fixes/boundaries.
