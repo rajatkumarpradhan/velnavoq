@@ -55,7 +55,7 @@ async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>
  const ws=/^\/api\/workspaces\/([^/]+)\/projects$/.exec(path);
  if(ws){const workspaceId=ws[1]!;await role(env,who.userId,workspaceId,method==='GET'?['owner','editor','viewer']:['owner','editor']);
  if(method==='GET')return Response.json((await env.DB.prepare('SELECT id,name,revision,release_digest FROM projects WHERE workspace_id=?').bind(workspaceId).all()).results);
- if(method==='POST'){const b=await readBody(req),name=validateName(b.name),id=crypto.randomUUID();await env.DB.prepare('INSERT INTO projects(id,workspace_id,name,created_at,created_by) VALUES(?,?,?,?,?)').bind(id,workspaceId,name,Date.now(),who.userId).run();return Response.json({id,name,revision:0},{status:201});}}
+ if(method==='POST'){const b=await readBody(req),name=validateName(b.name),id=crypto.randomUUID();await env.DB.batch([env.DB.prepare('INSERT INTO projects(id,workspace_id,name,created_at,created_by) VALUES(?,?,?,?,?)').bind(id,workspaceId,name,Date.now(),who.userId),env.DB.prepare('INSERT INTO ai_budgets(project_id,token_limit) VALUES(?,?)').bind(id,40000)]);return Response.json({id,name,revision:0},{status:201});}}
  const pr=/^\/api\/projects\/([^/]+)(?:\/(proposals|audit|runtime))?$/.exec(path);
  if(pr){const p=await project(env,who.userId,pr[1]!,method==='POST'?['owner','editor']:['owner','editor','viewer']);
  if(!pr[2]&&method==='GET')return Response.json(p);
