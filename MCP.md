@@ -1,3 +1,7 @@
+# Current: Part 30
+
+See PART30-MCP-AUTOPILOT.md for the current source/static Autopilot tools, scopes, limits and protocol compatibility. The Part 14 architecture below is historical: review-only defaults remain, but explicit owner Autopilot can permit source apply and project static release. External-client installation is not yet verified.
+
 # Velnavoq MCP architecture
 
 Part 14, researched and tested 10 October 2026. Protocol baseline: **2026-07-28**. This is a limited modern MCP server and owner permission UI, not a remote-server connector or a claim of universal client compatibility. Source and tests are implemented; the control plane is not deployed. Existing password sign-in is explicitly local-only; production owner identity still needs configuration before this OAuth flow can be enabled publicly.
