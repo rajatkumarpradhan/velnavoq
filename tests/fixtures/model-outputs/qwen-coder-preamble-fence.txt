@@ -1,0 +1,7 @@
+Here is the JSON array of bounded changes for the requested page:
+
+```json
+[{"path":"app.js","operation":"CREATE","previousDigest":null,"content":"document.body.insertAdjacentHTML(\"beforeend\",\"<p>ready [ok]</p>\");","to":null,"reason":"Add the client script requested by the user","risk":"low"}]
+```
+
+The array above creates one new file; no existing files are modified.
