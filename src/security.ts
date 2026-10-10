@@ -21,7 +21,7 @@ export function validateBundle(raw:unknown):Bundle {
  if(entries.length<1||entries.length>50||!Object.hasOwn(files,'index.html'))throw new ApiError(400,'invalid_file_count_or_entry');
  let total=0;
  for(const [path,content] of entries){
-  if(path.length>160||path.startsWith('/')||path.includes('\\')||path.split('/').some(x=>!x||x==='.'||x==='..')||! /^[a-zA-Z0-9_./-]+\.(html|css|js|json|svg|txt)$/.test(path)||path.split('/').some(x=>x.startsWith('.'))||typeof content!=='string')throw new ApiError(400,'invalid_file_path_or_content');
+  if(path.split('/').some(x=>['__proto__','constructor','prototype'].includes(x))||path.length>160||path.startsWith('/')||path.includes('\\')||path.split('/').some(x=>!x||x==='.'||x==='..')||! /^[a-zA-Z0-9_./-]+\.(html|css|js|json|svg|txt)$/.test(path)||path.split('/').some(x=>x.startsWith('.'))||typeof content!=='string')throw new ApiError(400,'invalid_file_path_or_content');
   total+=enc.encode(content).byteLength;
  }
  if(total>500000)throw new ApiError(413,'bundle_too_large');
@@ -33,6 +33,30 @@ export async function readBody(req:Request):Promise<Record<string,unknown>> {
  const reader=req.body?.getReader(); if(!reader)throw new ApiError(400,'invalid_json'); const chunks:Uint8Array[]=[];let size=0;
  while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>550000){await reader.cancel();throw new ApiError(413,'body_too_large');}chunks.push(value);}
  const bytes=new Uint8Array(size);let offset=0;for(const c of chunks){bytes.set(c,offset);offset+=c.length;}
- try { const b=JSON.parse(new TextDecoder().decode(bytes));if(!b||typeof b!=='object'||Array.isArray(b))throw 0;return b; }catch{throw new ApiError(400,'invalid_json');}
+ try { const b=JSON.parse(new TextDecoder('utf-8',{fatal:true,ignoreBOM:false}).decode(bytes));if(!b||typeof b!=='object'||Array.isArray(b))throw 0;validateStructure(b);return b; }catch(e){if(e instanceof ApiError)throw e;throw new ApiError(400,'invalid_json');}
 }
 export function checkOrigin(req:Request,origin:string):void { if(req.headers.get('origin')!==origin)throw new ApiError(403,'origin_denied'); }
+
+/** Iterative validation before recursive canonicalization, secret checks or schema walks. */
+export function validateStructure(value:unknown):void {
+ const pending:{value:unknown;depth:number}[]=[{value,depth:0}];let nodes=0;
+ while(pending.length){const item=pending.pop()!;if(++nodes>20000||item.depth>32)throw new ApiError(413,'json_complexity_limit');
+ if(item.value&&typeof item.value==='object')for(const [key,v] of Object.entries(item.value)){
+ if(['__proto__','constructor','prototype'].includes(key))throw new ApiError(400,'json_reserved_key');
+ pending.push({value:v,depth:item.depth+1});}}
+}
+/** A duplicate credential cookie must never select an attacker-chosen first value. */
+export function sessionToken(req:Request):string {
+ const matches=(req.headers.get('cookie')||'').split(';').map(x=>x.trim()).filter(x=>x.startsWith('velnavoq_session='));
+ if(matches.length!==1)throw new ApiError(401,'authentication_required');const token=matches[0]!.slice(17);
+ if(!/^[0-9a-f]{64}$/.test(token))throw new ApiError(401,'authentication_required');return token;
+}
+
+/** Public target configuration is operator-owned; no user URL or arbitrary IP target. */
+export function publicTarget(target:URL,control:URL):boolean {
+ const h=target.hostname.toLowerCase();
+ return target.protocol==='https:'&&h!==control.hostname.toLowerCase()&&h.includes('.')&&
+ /^[a-z0-9.-]+$/.test(h)&&! /^\d+(?:\.\d+){3}$/.test(h)&&
+ !['localhost','metadata.google.internal'].includes(h)&&! /\.(?:localhost|local|internal|test|invalid)$/.test(h)&&
+ !target.port&&!target.username&&!target.password&&target.pathname==='/'&&!target.search&&!target.hash;
+                                                                             }
