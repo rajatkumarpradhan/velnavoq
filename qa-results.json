@@ -1,0 +1,710 @@
+{
+  "generatedAt": "2026-10-10T04:37:00.935Z",
+  "environment": {
+    "node": "v22.23.3",
+    "platform": "linux/x64",
+    "date": "2026-10-10T05:00:05.417Z",
+    "stack": "free-only: miniflare workerd + D1 + Playwright chromium (headless), no paid services"
+  },
+  "stages": {
+    "typecheck": {
+      "status": "PASS",
+      "durationMs": 477,
+      "tail": ""
+    },
+    "build": {
+      "status": "PASS",
+      "durationMs": 2103,
+      "tail": "env.AI_REPAIR_ENABLED (\"false\")                         Environment Variable       | --dry-run: exiting now."
+    },
+    "targetBuild": {
+      "status": "PASS",
+      "durationMs": 1531,
+      "tail": "env.DB (velnavoq-static-releases)      D1 Database       | --dry-run: exiting now."
+    },
+    "audit": {
+      "status": "PASS",
+      "durationMs": 393,
+      "tail": "vulnerabilities: {\"info\":0,\"low\":0,\"moderate\":0,\"high\":0,\"critical\":0,\"total\":0}"
+    },
+    "backup": {
+      "status": "PASS",
+      "durationMs": 531,
+      "tail": "Backup verified. SHA256: 811f6d42cf3808b2bea40a6d78812b2d607e7963ef3c791d2491ad6243408ea9 | PASS: populated migration upgrade, exact binary and SQL restore, integrity/FKs, private mode, restored triggers and full deletion graph"
+    },
+    "vitest": {
+      "status": "PASS",
+      "durationMs": 68106,
+      "tail": " Test Files  20 passed (20) |       Tests  385 passed (385) |    Start at  10:16:51 |    Duration  67.25s (tests 89%, import 10%, transform 1%)",
+      "testFiles": 20,
+      "tests": 385
+    },
+    "checks": {
+      "accessibility-check": {
+        "status": "PASS",
+        "durationMs": 47057,
+        "passLine": null,
+        "tail": "PASS editor Tab exits without inserting indentation | PASS palette Escape returns focus | PASS mobile nav Escape returns focus | BASELINE 147 failures 0",
+        "checks": null,
+        "summary": "PASS editor Tab exits without inserting indentation | PASS palette Escape returns focus | PASS mobile nav Escape returns focus | BASELINE 147 failures 0"
+      },
+      "accessibility-evidence": {
+        "status": "PASS",
+        "durationMs": 14941,
+        "passLine": null,
+        "tail": "PASS firefox editor axe [] | PASS firefox editor Tab exits | PASS firefox palette Escape returns focus | EVIDENCE 28 failures 0",
+        "checks": null,
+        "summary": "PASS firefox editor axe [] | PASS firefox editor Tab exits | PASS firefox palette Escape returns focus | EVIDENCE 28 failures 0"
+      },
+      "approval-check": {
+        "status": "PASS",
+        "durationMs": 12549,
+        "passLine": "APPROVAL PASS 19 same-server state/issuer callback, server-only token, revoke, exact source/risk/permissions, review acknowledgement, atomic execution, four layouts and a11y",
+        "tail": "{\"project_id\":\"96230401-fbda-40b3-a0d7-8711a7c28d19\",\"request_id\":\"afffc2cd-5380-4475-a5af-2ec3a277335a\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":19,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608122814} | {\"project_id\":\"96230401-fbda-40b3-a0d7-8711a7c28d19\",\"request_id\":\"8d3fa76d-c5de-4a0e-9732-f671fb15db49\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":31,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608122858} | {\"project_id\":\"96230401-fbda-40b3-a0d7-8711a7c28d19\",\"request_id\":\"48ae5b91-a323-4b2e-ad7d-dc71c97977be\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":14,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608122877} | APPROVAL PASS 19 same-server state/issuer callback, server-only token, revoke, exact source/risk/permissions, review acknowledgement, atomic execution, four layouts and a11y",
+        "checks": 19,
+        "summary": "same-server state/issuer callback, server-only token, revoke, exact source/risk/permissions, review acknowledgement, atomic execution, four layouts and a11y"
+      },
+      "build-check": {
+        "status": "PASS",
+        "durationMs": 10879,
+        "passLine": "BUILD PASS 23 actual production static build, ZIP bytes, D1 logs, reload, intentional failure, no artifact on failure, cancellation, mobile layouts/a11y",
+        "tail": "{\"project_id\":\"b878acc4-efb7-450a-8a5a-dac6991af9f3\",\"request_id\":\"f4a28bbb-8bcf-4d95-b505-fd797f69d392\",\"job_id\":\"9be4e56e-9c73-4e5a-9845-88f31cd7a20c\",\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":28,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608130048} | {\"project_id\":\"b878acc4-efb7-450a-8a5a-dac6991af9f3\",\"request_id\":\"684248d0-c769-451d-b4c6-94cb5e2a53a0\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":13,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608130070} | {\"project_id\":\"b878acc4-efb7-450a-8a5a-dac6991af9f3\",\"request_id\":\"402a11d0-19c5-4e58-ad57-fdf8b6e652d3\",\"job_id\":\"13643fe2-b5aa-4ca5-adf1-6d90f58f66a6\",\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":15,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608130182} | BUILD PASS 23 actual production static build, ZIP bytes, D1 logs, reload, intentional failure, no artifact on failure, cancellation, mobile layouts/a11y",
+        "checks": 23,
+        "summary": "actual production static build, ZIP bytes, D1 logs, reload, intentional failure, no artifact on failure, cancellation, mobile layouts/a11y"
+      },
+      "deployment-check": {
+        "status": "PASS",
+        "durationMs": 7459,
+        "passLine": "DEPLOYMENT UI PASS 18 actual local Worker/D1 blocked pipeline metadata, no fake release or URL, four viewport layouts/a11y",
+        "tail": "{\"project_id\":\"e4ea5abb-3e7b-44d8-b613-3faaeaa59c66\",\"request_id\":\"c288db78-25b1-407e-9773-026fed69c6dc\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":25,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608138174} | {\"project_id\":\"e4ea5abb-3e7b-44d8-b613-3faaeaa59c66\",\"request_id\":\"8f4eed99-ae5f-4ef8-9bbd-5f1ad58f653e\",\"job_id\":\"bf56afab-f1a8-4d56-8e92-317f30c07f48\",\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":20,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608138630} | {\"project_id\":\"e4ea5abb-3e7b-44d8-b613-3faaeaa59c66\",\"request_id\":\"929c2a84-bbdf-4b31-8553-4fff0098c488\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":17,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608138660} | DEPLOYMENT UI PASS 18 actual local Worker/D1 blocked pipeline metadata, no fake release or URL, four viewport layouts/a11y",
+        "checks": 18,
+        "summary": "actual local Worker/D1 blocked pipeline metadata, no fake release or URL, four viewport layouts/a11y"
+      },
+      "editor-check": {
+        "status": "PASS",
+        "durationMs": 17874,
+        "passLine": "EDITOR PASS 29 real Worker/D1 save reload history, syntax, diagnostics, search replace, diff, AI review, keyboard, mobile layouts/a11y",
+        "tail": "{\"project_id\":\"45403d3b-6189-46d2-8a80-b97e80ae7663\",\"request_id\":\"4c1587c6-861e-42a5-9c42-bfc6aac68dbd\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":15,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608150319} | THROTTLED_EDIT_MS 447 | LARGE_BUFFER_EDIT_MS 227 | EDITOR PASS 29 real Worker/D1 save reload history, syntax, diagnostics, search replace, diff, AI review, keyboard, mobile layouts/a11y",
+        "checks": 29,
+        "summary": "real Worker/D1 save reload history, syntax, diagnostics, search replace, diff, AI review, keyboard, mobile layouts/a11y"
+      },
+      "environment-check": {
+        "status": "PASS",
+        "durationMs": 7674,
+        "passLine": "ENVIRONMENT PASS 18 masked actual local Worker/D1 create rotate delete metadata and audit, form clear, four viewport layouts/a11y, no runtime injection",
+        "tail": "{\"project_id\":\"9e65eaf1-3b0e-434b-88cc-361a30906dad\",\"request_id\":\"53b17153-66a3-42f4-b19f-c56ea2668113\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":24,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608166714} | {\"project_id\":\"9e65eaf1-3b0e-434b-88cc-361a30906dad\",\"request_id\":\"cf43a0f6-7312-43db-ae1d-032cdadaf64c\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":12,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608166739} | {\"project_id\":\"9e65eaf1-3b0e-434b-88cc-361a30906dad\",\"request_id\":\"f7059022-43b0-444d-aab2-0a38803043f0\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":14,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608166763} | ENVIRONMENT PASS 18 masked actual local Worker/D1 create rotate delete metadata and audit, form clear, four viewport layouts/a11y, no runtime injection",
+        "checks": 18,
+        "summary": "masked actual local Worker/D1 create rotate delete metadata and audit, form clear, four viewport layouts/a11y, no runtime injection"
+      },
+      "mcp-check": {
+        "status": "PASS",
+        "durationMs": 9817,
+        "passLine": "MCP PASS 20 real local OAuth PKCE explicit review, callback, token, protected RPC, revocation, four viewport layouts and a11y",
+        "tail": "{\"project_id\":\"e51f505e-d7d4-4f66-b045-f72b044a31c8\",\"request_id\":\"45e26164-10c8-4364-8d76-d0389f276032\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":14,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608176577} | {\"project_id\":null,\"request_id\":\"8314ca00-d375-4c02-9580-37238b6c383f\",\"job_id\":null,\"kind\":\"mcp\",\"event\":\"mcp_failed\",\"level\":\"warn\",\"status\":null,\"duration_ms\":null,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608176587} | {\"project_id\":null,\"request_id\":\"8314ca00-d375-4c02-9580-37238b6c383f\",\"job_id\":null,\"kind\":\"auth\",\"event\":\"authentication_failed\",\"level\":\"warn\",\"status\":401,\"duration_ms\":12,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608176591} | MCP PASS 20 real local OAuth PKCE explicit review, callback, token, protected RPC, revocation, four viewport layouts and a11y",
+        "checks": 20,
+        "summary": "real local OAuth PKCE explicit review, callback, token, protected RPC, revocation, four viewport layouts and a11y"
+      },
+      "navigation-check": {
+        "status": "PASS",
+        "durationMs": 15505,
+        "passLine": "NAVIGATION PASS 39 real local Worker/D1, authenticated switchers/search/audit feed, errors/loading/logout/expiry and six layouts",
+        "tail": "{\"project_id\":null,\"request_id\":\"aedac589-c112-453c-a346-7a645f675eeb\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":6,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608192016} | {\"project_id\":null,\"request_id\":\"35ab6db9-a5a9-4564-9b15-caff4e48fea6\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":5,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608192028} | {\"project_id\":null,\"request_id\":\"fa189cfd-5577-4207-9434-efa419687c57\",\"job_id\":null,\"kind\":\"auth\",\"event\":\"authentication_failed\",\"level\":\"warn\",\"status\":401,\"duration_ms\":8,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608192115} | NAVIGATION PASS 39 real local Worker/D1, authenticated switchers/search/audit feed, errors/loading/logout/expiry and six layouts",
+        "checks": 39,
+        "summary": "real local Worker/D1, authenticated switchers/search/audit feed, errors/loading/logout/expiry and six layouts"
+      },
+      "observability-check": {
+        "status": "PASS",
+        "durationMs": 6806,
+        "passLine": "OBSERVABILITY UI PASS 21 actual local Worker/D1 events, request search, authentic queued/blocked timeline, four viewport layouts/a11y",
+        "tail": "{\"project_id\":\"af326bae-f5f0-4e48-acf1-76dd7cc0261b\",\"request_id\":\"98596804-cc76-4517-9c02-0f528ced4e24\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":11,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608196260} | {\"project_id\":\"af326bae-f5f0-4e48-acf1-76dd7cc0261b\",\"request_id\":\"93453d3e-116f-499c-9f52-7707922335f4\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":15,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608196277} | {\"project_id\":\"af326bae-f5f0-4e48-acf1-76dd7cc0261b\",\"request_id\":\"8064644b-e3c5-4507-8e28-6df30a3eeb3a\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":22,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608196284} | OBSERVABILITY UI PASS 21 actual local Worker/D1 events, request search, authentic queued/blocked timeline, four viewport layouts/a11y",
+        "checks": 21,
+        "summary": "actual local Worker/D1 events, request search, authentic queued/blocked timeline, four viewport layouts/a11y"
+      },
+      "performance-check": {
+        "status": "PASS",
+        "durationMs": 52756,
+        "passLine": null,
+        "tail": "    \"no overflow 1440\", |     \"a11y 1440 \" |   ] | }",
+        "checks": null,
+        "summary": "    \"no overflow 1440\", |     \"a11y 1440 \" |   ] | }"
+      },
+      "preview-check": {
+        "status": "PASS",
+        "durationMs": 16960,
+        "passLine": "PREVIEW PASS 29 real two-host browser preview, actual app DOM, opaque storage/cookie/parent isolation, restart/stop, mobile a11y",
+        "tail": "{\"project_id\":\"ee90630e-d8b9-4ebb-8e57-e9873a8177e9\",\"request_id\":\"7b797780-e9ba-4626-8145-f27e8f79779f\",\"job_id\":\"0d06bf7f-4156-4b04-a49e-4b31d62ddec9\",\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":25,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608257905} | {\"project_id\":null,\"request_id\":\"dfb000b7-a7b3-46f2-93b2-8a3238635ce8\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":10,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608258005} | {\"project_id\":null,\"request_id\":\"8ebbf701-c893-41a5-af1d-519d231d7f54\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":12,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608258063} | PREVIEW PASS 29 real two-host browser preview, actual app DOM, opaque storage/cookie/parent isolation, restart/stop, mobile a11y",
+        "checks": 29,
+        "summary": "real two-host browser preview, actual app DOM, opaque storage/cookie/parent isolation, restart/stop, mobile a11y"
+      },
+      "repair-check": {
+        "status": "PASS",
+        "durationMs": 7418,
+        "passLine": "REPAIR PASS 16 actual terminal error, persisted diagnostic, unavailable AI, stop, layouts and accessibility",
+        "tail": "{\"project_id\":\"a8613166-0069-42b9-821d-493bb92e453e\",\"request_id\":\"952efe1f-23a6-4bb4-8533-a706d9162751\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":35,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608275973} | {\"project_id\":\"a8613166-0069-42b9-821d-493bb92e453e\",\"request_id\":\"acaf3621-92a8-45e4-bbfd-c389bead0ad8\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":35,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608275973} | {\"project_id\":\"a8613166-0069-42b9-821d-493bb92e453e\",\"request_id\":\"3a363194-bbf5-46a3-8999-e662857f0002\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":35,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608275973} | REPAIR PASS 16 actual terminal error, persisted diagnostic, unavailable AI, stop, layouts and accessibility",
+        "checks": 16,
+        "summary": "actual terminal error, persisted diagnostic, unavailable AI, stop, layouts and accessibility"
+      },
+      "security-auth-check": {
+        "status": "PASS",
+        "durationMs": 13056,
+        "passLine": "SECURITY AUTH UI PASS 18 real password change and all-session logout, host CSRF cookie, four viewport layouts/a11y",
+        "tail": "{\"project_id\":null,\"request_id\":\"1f261524-d361-49dc-a4fd-7a0f161eadae\",\"job_id\":null,\"kind\":\"auth\",\"event\":\"authentication_failed\",\"level\":\"warn\",\"status\":401,\"duration_ms\":8,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608281051} | {\"project_id\":null,\"request_id\":\"f5feb7c0-c3da-40fb-b616-3dc9688bdad3\",\"job_id\":null,\"kind\":\"auth\",\"event\":\"authentication_failed\",\"level\":\"warn\",\"status\":401,\"duration_ms\":3,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608288848} | {\"project_id\":null,\"request_id\":\"427cf9b3-a07b-4fe2-bfe0-785cec03ff3d\",\"job_id\":null,\"kind\":\"auth\",\"event\":\"authentication_succeeded\",\"level\":\"info\",\"status\":200,\"duration_ms\":96,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608288953} | SECURITY AUTH UI PASS 18 real password change and all-session logout, host CSRF cookie, four viewport layouts/a11y",
+        "checks": 18,
+        "summary": "real password change and all-session logout, host CSRF cookie, four viewport layouts/a11y"
+      },
+      "security-check": {
+        "status": "PASS",
+        "durationMs": 3324,
+        "passLine": "SECURITY MATRIX PASS 8 all 22 source rows, four widths, accessibility/no-overflow, no synthetic security status",
+        "tail": "SECURITY MATRIX PASS 8 all 22 source rows, four widths, accessibility/no-overflow, no synthetic security status",
+        "checks": 8,
+        "summary": "all 22 source rows, four widths, accessibility/no-overflow, no synthetic security status"
+      },
+      "terminal-check": {
+        "status": "PASS",
+        "durationMs": 12457,
+        "passLine": "TERMINAL PASS 28 real browser WASM execution, D1 job binding, stdout/stderr, reload, unsupported commands, cancellation, timeout, mobile overflow/a11y",
+        "tail": "{\"project_id\":\"24d265f2-2cc3-4db2-baf0-a95c081a927f\",\"request_id\":\"ca482c76-57d9-4482-aa43-bc79ccf64b0a\",\"job_id\":\"ef685159-bd14-4bb3-9b06-721a59d84993\",\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":16,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608301779} | {\"project_id\":\"24d265f2-2cc3-4db2-baf0-a95c081a927f\",\"request_id\":\"0bb3d5ac-9058-4093-a5d6-069b21b8b026\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":10,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608301795} | {\"project_id\":\"24d265f2-2cc3-4db2-baf0-a95c081a927f\",\"request_id\":\"61559ae2-de7b-4e69-b26b-1aad973c0926\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":12,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608301986} | TERMINAL PASS 28 real browser WASM execution, D1 job binding, stdout/stderr, reload, unsupported commands, cancellation, timeout, mobile overflow/a11y",
+        "checks": 28,
+        "summary": "real browser WASM execution, D1 job binding, stdout/stderr, reload, unsupported commands, cancellation, timeout, mobile overflow/a11y"
+      },
+      "ui-check": {
+        "status": "PASS",
+        "durationMs": 28247,
+        "passLine": null,
+        "tail": "UI checks PASS: 254 layout/a11y/command navigation/30 screens; no API writes or fake output.",
+        "checks": null,
+        "summary": "UI checks PASS: 254 layout/a11y/command navigation/30 screens; no API writes or fake output."
+      },
+      "versioning-check": {
+        "status": "PASS",
+        "durationMs": 7407,
+        "passLine": "VERSIONING PASS 20 actual local Worker/D1 history diff immutable release target rollback proposal exact review forward revision, four viewport layouts/a11y",
+        "tail": "{\"project_id\":\"ab4d102e-5ce9-4088-82de-35fd5334f6c4\",\"request_id\":\"cb7aaaef-f48c-4726-918f-d3f7de335578\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":13,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608340524} | {\"project_id\":\"ab4d102e-5ce9-4088-82de-35fd5334f6c4\",\"request_id\":\"1c233cbf-9a24-4f7b-ab87-f0619a661522\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":8,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608340549} | {\"project_id\":\"ab4d102e-5ce9-4088-82de-35fd5334f6c4\",\"request_id\":\"19f58668-80d3-4f64-9c70-66a5e0ba20a7\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_completed\",\"level\":\"info\",\"status\":200,\"duration_ms\":7,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608340563} | VERSIONING PASS 20 actual local Worker/D1 history diff immutable release target rollback proposal exact review forward revision, four viewport layouts/a11y",
+        "checks": 20,
+        "summary": "actual local Worker/D1 history diff immutable release target rollback proposal exact review forward revision, four viewport layouts/a11y"
+      }
+    },
+    "e2e": {
+      "status": "PASS",
+      "durationMs": 23419,
+      "passLine": null,
+      "tail": "{\"project_id\":\"fe51a3eb-85ce-4787-aee4-da2a62b4f67c\",\"request_id\":\"f0a5196c-493c-403f-86b4-45b65de7a8f8\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_failed\",\"level\":\"warn\",\"status\":400,\"duration_ms\":12,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608428753} | {\"project_id\":\"fe51a3eb-85ce-4787-aee4-da2a62b4f67c\",\"request_id\":\"5a6ce585-ec84-4e86-b330-c6048b16c6fb\",\"job_id\":null,\"kind\":\"request\",\"event\":\"request_failed\",\"level\":\"warn\",\"status\":400,\"duration_ms\":15,\"input_tokens\":null,\"output_tokens\":null,\"usage_reported\":null,\"created_at\":1791608428774} | + TEST 10 | terminal rejects shell/network/secret commands | PASS curl/dotenv/parent-path all 400 | E2E PASS 32 steps, 3 NOT RUN, 0 failures",
+      "summary": [
+        {
+          "test": "TEST 1",
+          "status": "PASS",
+          "pass": 5,
+          "notRun": 0,
+          "fail": 0,
+          "steps": [
+            {
+              "test": "TEST 1",
+              "step": "register new user via API",
+              "status": "PASS",
+              "detail": "session issued"
+            },
+            {
+              "test": "TEST 1",
+              "step": "create workspace",
+              "status": "PASS",
+              "detail": "829266e3-4630-4f69-b7b1-6c53705a6d1b"
+            },
+            {
+              "test": "TEST 1",
+              "step": "create project",
+              "status": "PASS",
+              "detail": "fe51a3eb-85ce-4787-aee4-da2a62b4f67c"
+            },
+            {
+              "test": "TEST 1",
+              "step": "sign in through the real UI form",
+              "status": "PASS",
+              "detail": "form sign-in reaches app shell"
+            },
+            {
+              "test": "TEST 1",
+              "step": "project reachable in UI",
+              "status": "PASS",
+              "detail": "project build panel renders"
+            }
+          ]
+        },
+        {
+          "test": "TEST 2",
+          "status": "PASS",
+          "pass": 4,
+          "notRun": 1,
+          "fail": 0,
+          "steps": [
+            {
+              "test": "TEST 2",
+              "step": "prompt sent to AI request endpoint",
+              "status": "PASS",
+              "detail": "fail-closed 503 ai_provider_not_connected"
+            },
+            {
+              "test": "TEST 2",
+              "step": "AI model generates files from prompt",
+              "status": "NOT RUN",
+              "detail": "no AI provider connected (free-only, no key); endpoint verified fail-closed above"
+            },
+            {
+              "test": "TEST 2",
+              "step": "files produced through the validated agent patch path",
+              "status": "PASS",
+              "detail": "hello.html approved at revision 2"
+            },
+            {
+              "test": "TEST 2",
+              "step": "real browser build succeeds",
+              "status": "PASS",
+              "detail": "Build static app -> succeeded"
+            },
+            {
+              "test": "TEST 2",
+              "step": "two-host preview renders built app",
+              "status": "PASS",
+              "detail": "separate origin preview ready"
+            }
+          ]
+        },
+        {
+          "test": "TEST 3",
+          "status": "PASS",
+          "pass": 4,
+          "notRun": 1,
+          "fail": 0,
+          "steps": [
+            {
+              "test": "TEST 3",
+              "step": "inject intentional build error",
+              "status": "PASS",
+              "detail": "broken app.js approved"
+            },
+            {
+              "test": "TEST 3",
+              "step": "build fails with real diagnostic",
+              "status": "PASS",
+              "detail": "failed, exit 1, syntax diagnostic"
+            },
+            {
+              "test": "TEST 3",
+              "step": "repair session bound to the failure",
+              "status": "PASS",
+              "detail": "propose fail-closed 503 repair_ai_provider_not_connected"
+            },
+            {
+              "test": "TEST 3",
+              "step": "AI repair generates the fix",
+              "status": "NOT RUN",
+              "detail": "no repair AI provider connected (free-only); propose verified fail-closed above"
+            },
+            {
+              "test": "TEST 3",
+              "step": "corrective patch applied and rebuild succeeds",
+              "status": "PASS",
+              "detail": "rebuild succeeded after repair"
+            }
+          ]
+        },
+        {
+          "test": "TEST 4",
+          "status": "PASS",
+          "pass": 3,
+          "notRun": 0,
+          "fail": 0,
+          "steps": [
+            {
+              "test": "TEST 4",
+              "step": "editor save creates auto-approved revision",
+              "status": "PASS",
+              "detail": "revision 5"
+            },
+            {
+              "test": "TEST 4",
+              "step": "build after editor save succeeds",
+              "status": "PASS",
+              "detail": "build succeeded"
+            },
+            {
+              "test": "TEST 4",
+              "step": "built artifact contains the edited file",
+              "status": "PASS",
+              "detail": "hello.html in ZIP has manual edit"
+            }
+          ]
+        },
+        {
+          "test": "TEST 5",
+          "status": "PASS",
+          "pass": 3,
+          "notRun": 0,
+          "fail": 0,
+          "steps": [
+            {
+              "test": "TEST 5",
+              "step": "register MCP client and authorize with PKCE consent",
+              "status": "PASS",
+              "detail": "client authorized, token issued"
+            },
+            {
+              "test": "TEST 5",
+              "step": "authorized MCP tool call returns real project",
+              "status": "PASS",
+              "detail": "velnavoq.project returned exact project"
+            },
+            {
+              "test": "TEST 5",
+              "step": "revoke token denies further calls",
+              "status": "PASS",
+              "detail": "revoked token -> 401"
+            }
+          ]
+        },
+        {
+          "test": "TEST 6",
+          "status": "PASS",
+          "pass": 2,
+          "notRun": 0,
+          "fail": 0,
+          "steps": [
+            {
+              "test": "TEST 6",
+              "step": "create masked secret and build",
+              "status": "PASS",
+              "detail": "masked SERVICE_TOKEN created, build succeeded"
+            },
+            {
+              "test": "TEST 6",
+              "step": "secret never reaches API, build log or artifact",
+              "status": "PASS",
+              "detail": "canary absent from API, log, ZIP, context"
+            }
+          ]
+        },
+        {
+          "test": "TEST 7",
+          "status": "PASS",
+          "pass": 3,
+          "notRun": 1,
+          "fail": 0,
+          "steps": [
+            {
+              "test": "TEST 7",
+              "step": "pin immutable source release",
+              "status": "PASS",
+              "detail": "release v1 pinned"
+            },
+            {
+              "test": "TEST 7",
+              "step": "deploy to local target with real health check",
+              "status": "PASS",
+              "detail": "release local-http"
+            },
+            {
+              "test": "TEST 7",
+              "step": "health check: served release matches published bytes",
+              "status": "PASS",
+              "detail": "http://127.0.0.1:5192/r/cf7dbc26-e901-4feb-9e3f-ad44563dbf5e/index.html"
+            },
+            {
+              "test": "TEST 7",
+              "step": "public app on the internet",
+              "status": "NOT RUN",
+              "detail": "no public deployment exists (free-only, workers_dev off, no domain); local HTTP release URL verified above"
+            }
+          ]
+        },
+        {
+          "test": "TEST 8",
+          "status": "PASS",
+          "pass": 2,
+          "notRun": 0,
+          "fail": 0,
+          "steps": [
+            {
+              "test": "TEST 8",
+              "step": "deploy a second (bad) release",
+              "status": "PASS",
+              "detail": "bad release live at target"
+            },
+            {
+              "test": "TEST 8",
+              "step": "rollback restores exact known-good bytes",
+              "status": "PASS",
+              "detail": "routing repointed to known-good bytes"
+            }
+          ]
+        },
+        {
+          "test": "TEST 9",
+          "status": "PASS",
+          "pass": 4,
+          "notRun": 0,
+          "fail": 0,
+          "steps": [
+            {
+              "test": "TEST 9",
+              "step": "second user registered in separate tenant",
+              "status": "PASS",
+              "detail": "user B ready"
+            },
+            {
+              "test": "TEST 9",
+              "step": "user B denied every access to user A project",
+              "status": "PASS",
+              "detail": "read project:404 inject patch:404 read versions:404 read environment:404 start build:404"
+            },
+            {
+              "test": "TEST 9",
+              "step": "user B MCP authorize for user A project refused",
+              "status": "PASS",
+              "detail": "oauth 400, B workspace list clean"
+            },
+            {
+              "test": "TEST 9",
+              "step": "user A session restored",
+              "status": "PASS",
+              "detail": "user A back"
+            }
+          ]
+        },
+        {
+          "test": "TEST 10",
+          "status": "PASS",
+          "pass": 2,
+          "notRun": 0,
+          "fail": 0,
+          "steps": [
+            {
+              "test": "TEST 10",
+              "step": "malicious approved patch deployed to preview sandbox",
+              "status": "PASS",
+              "detail": "storage/parent/cookie blocked, 0 privileged calls, runtime_error surfaced"
+            },
+            {
+              "test": "TEST 10",
+              "step": "terminal rejects shell/network/secret commands",
+              "status": "PASS",
+              "detail": "curl/dotenv/parent-path all 400"
+            }
+          ]
+        }
+      ],
+      "results": [
+        {
+          "test": "TEST 1",
+          "step": "register new user via API",
+          "status": "PASS",
+          "detail": "session issued"
+        },
+        {
+          "test": "TEST 1",
+          "step": "create workspace",
+          "status": "PASS",
+          "detail": "829266e3-4630-4f69-b7b1-6c53705a6d1b"
+        },
+        {
+          "test": "TEST 1",
+          "step": "create project",
+          "status": "PASS",
+          "detail": "fe51a3eb-85ce-4787-aee4-da2a62b4f67c"
+        },
+        {
+          "test": "TEST 1",
+          "step": "sign in through the real UI form",
+          "status": "PASS",
+          "detail": "form sign-in reaches app shell"
+        },
+        {
+          "test": "TEST 1",
+          "step": "project reachable in UI",
+          "status": "PASS",
+          "detail": "project build panel renders"
+        },
+        {
+          "test": "TEST 2",
+          "step": "prompt sent to AI request endpoint",
+          "status": "PASS",
+          "detail": "fail-closed 503 ai_provider_not_connected"
+        },
+        {
+          "test": "TEST 2",
+          "step": "AI model generates files from prompt",
+          "status": "NOT RUN",
+          "detail": "no AI provider connected (free-only, no key); endpoint verified fail-closed above"
+        },
+        {
+          "test": "TEST 2",
+          "step": "files produced through the validated agent patch path",
+          "status": "PASS",
+          "detail": "hello.html approved at revision 2"
+        },
+        {
+          "test": "TEST 2",
+          "step": "real browser build succeeds",
+          "status": "PASS",
+          "detail": "Build static app -> succeeded"
+        },
+        {
+          "test": "TEST 2",
+          "step": "two-host preview renders built app",
+          "status": "PASS",
+          "detail": "separate origin preview ready"
+        },
+        {
+          "test": "TEST 3",
+          "step": "inject intentional build error",
+          "status": "PASS",
+          "detail": "broken app.js approved"
+        },
+        {
+          "test": "TEST 3",
+          "step": "build fails with real diagnostic",
+          "status": "PASS",
+          "detail": "failed, exit 1, syntax diagnostic"
+        },
+        {
+          "test": "TEST 3",
+          "step": "repair session bound to the failure",
+          "status": "PASS",
+          "detail": "propose fail-closed 503 repair_ai_provider_not_connected"
+        },
+        {
+          "test": "TEST 3",
+          "step": "AI repair generates the fix",
+          "status": "NOT RUN",
+          "detail": "no repair AI provider connected (free-only); propose verified fail-closed above"
+        },
+        {
+          "test": "TEST 3",
+          "step": "corrective patch applied and rebuild succeeds",
+          "status": "PASS",
+          "detail": "rebuild succeeded after repair"
+        },
+        {
+          "test": "TEST 4",
+          "step": "editor save creates auto-approved revision",
+          "status": "PASS",
+          "detail": "revision 5"
+        },
+        {
+          "test": "TEST 4",
+          "step": "build after editor save succeeds",
+          "status": "PASS",
+          "detail": "build succeeded"
+        },
+        {
+          "test": "TEST 4",
+          "step": "built artifact contains the edited file",
+          "status": "PASS",
+          "detail": "hello.html in ZIP has manual edit"
+        },
+        {
+          "test": "TEST 5",
+          "step": "register MCP client and authorize with PKCE consent",
+          "status": "PASS",
+          "detail": "client authorized, token issued"
+        },
+        {
+          "test": "TEST 5",
+          "step": "authorized MCP tool call returns real project",
+          "status": "PASS",
+          "detail": "velnavoq.project returned exact project"
+        },
+        {
+          "test": "TEST 5",
+          "step": "revoke token denies further calls",
+          "status": "PASS",
+          "detail": "revoked token -> 401"
+        },
+        {
+          "test": "TEST 6",
+          "step": "create masked secret and build",
+          "status": "PASS",
+          "detail": "masked SERVICE_TOKEN created, build succeeded"
+        },
+        {
+          "test": "TEST 6",
+          "step": "secret never reaches API, build log or artifact",
+          "status": "PASS",
+          "detail": "canary absent from API, log, ZIP, context"
+        },
+        {
+          "test": "TEST 7",
+          "step": "pin immutable source release",
+          "status": "PASS",
+          "detail": "release v1 pinned"
+        },
+        {
+          "test": "TEST 7",
+          "step": "deploy to local target with real health check",
+          "status": "PASS",
+          "detail": "release local-http"
+        },
+        {
+          "test": "TEST 7",
+          "step": "health check: served release matches published bytes",
+          "status": "PASS",
+          "detail": "http://127.0.0.1:5192/r/cf7dbc26-e901-4feb-9e3f-ad44563dbf5e/index.html"
+        },
+        {
+          "test": "TEST 7",
+          "step": "public app on the internet",
+          "status": "NOT RUN",
+          "detail": "no public deployment exists (free-only, workers_dev off, no domain); local HTTP release URL verified above"
+        },
+        {
+          "test": "TEST 8",
+          "step": "deploy a second (bad) release",
+          "status": "PASS",
+          "detail": "bad release live at target"
+        },
+        {
+          "test": "TEST 8",
+          "step": "rollback restores exact known-good bytes",
+          "status": "PASS",
+          "detail": "routing repointed to known-good bytes"
+        },
+        {
+          "test": "TEST 9",
+          "step": "second user registered in separate tenant",
+          "status": "PASS",
+          "detail": "user B ready"
+        },
+        {
+          "test": "TEST 9",
+          "step": "user B denied every access to user A project",
+          "status": "PASS",
+          "detail": "read project:404 inject patch:404 read versions:404 read environment:404 start build:404"
+        },
+        {
+          "test": "TEST 9",
+          "step": "user B MCP authorize for user A project refused",
+          "status": "PASS",
+          "detail": "oauth 400, B workspace list clean"
+        },
+        {
+          "test": "TEST 9",
+          "step": "user A session restored",
+          "status": "PASS",
+          "detail": "user A back"
+        },
+        {
+          "test": "TEST 10",
+          "step": "malicious approved patch deployed to preview sandbox",
+          "status": "PASS",
+          "detail": "storage/parent/cookie blocked, 0 privileged calls, runtime_error surfaced"
+        },
+        {
+          "test": "TEST 10",
+          "step": "terminal rejects shell/network/secret commands",
+          "status": "PASS",
+          "detail": "curl/dotenv/parent-path all 400"
+        }
+      ],
+      "environment": "local workerd + D1 + Chromium, built production UI, two-host preview, local deployment target"
+    }
+  }
+}
