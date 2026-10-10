@@ -22,3 +22,29 @@ it('Workers binding stream uses test-only binding, not remote inference',async()
 it('structured output is buffered and validated before emission',async()=>{const s=setup(async function*(){yield {type:'structured',value:{name:'valid'}}});const schema={type:'object' as const,properties:{name:'string' as const},required:['name']};expect(await collect(s.engine.run({...request,structured:schema},policy,new AbortController().signal))).toContainEqual({type:'structured',value:{name:'valid'}});const b=setup(async function*(){yield {type:'structured',value:{name:42}}});await expect(collect(b.engine.run({...request,structured:schema},policy,new AbortController().signal))).rejects.toMatchObject({code:'invalid_output'})});
 it('pre-cancelled request makes no reservation or provider call',async()=>{const c=new AbortController();c.abort();const s=setup(async function*(){throw Error('not called')});await expect(collect(s.engine.run(request,policy,c.signal))).rejects.toMatchObject({code:'cancelled'});expect(s.reservations).toHaveLength(0)});
 it('budget rejection prevents inference',async()=>{let called=false;const p:Provider={id:'test',connected:true,models:[model],stream:async function*(){called=true}};const e=new AIEngine([p],{reserve:async()=>{throw new AIError('budget_exceeded')},settle:async()=>{}},{record:async()=>{}});await expect(collect(e.run(request,policy,new AbortController().signal))).rejects.toMatchObject({code:'budget_exceeded'});expect(called).toBe(false)});
+
+// Regression based on observed live binding types, not invented live output bytes.
+it('Workers AI preserves typed null, numeric and boolean token fragments',async()=>{
+ const pieces=['[{"previousDigest":',null,',"content":"value ',7,'","to":',null,',"flag":',false,',"n":',0,'}]'];
+ const wire=pieces.map(response=>'data: '+JSON.stringify({response})+'\n\n').join('')+'data: [DONE]\n\n';
+ const p=new WorkersAIProvider({run:async()=>sse(wire)});const events:any[]=await collect(p.stream(request,new AbortController().signal));
+ const text=events.filter(x=>x.type==='delta').map(x=>x.text).join('');
+ expect(JSON.parse(text)).toEqual([{previousDigest:null,content:'value 7',to:null,flag:false,n:0}]);
+});
+it('Workers AI ignores absent response metadata but preserves explicit null',async()=>{
+ const p=new WorkersAIProvider({run:async()=>sse('data: {"usage":{"prompt_tokens":2,"completion_tokens":1}}\n\ndata: {"response":null}\n\ndata: [DONE]\n\n')});
+ const events:any[]=await collect(p.stream(request,new AbortController().signal));
+ expect(events.filter(x=>x.type==='delta')).toEqual([{type:'delta',text:'null'}]);
+ expect(events).toContainEqual({type:'usage',usage:{inputTokens:2,outputTokens:1,reported:true}});
+});
+it('Workers AI fails closed on compound response fragments',async()=>{
+ for(const response of [{content:'untrusted'},['x']]){
+  const p=new WorkersAIProvider({run:async()=>sse('data: '+JSON.stringify({response})+'\n\ndata: [DONE]\n\n')});
+  await expect(collect(p.stream(request,new AbortController().signal))).rejects.toMatchObject({code:'invalid_output',providerId:'workers-ai'});
+ }
+});
+it('Workers AI preserves digit tokens inside pinned digest text',async()=>{
+ const digest='abc709xyz';const wire=['{"digest":"abc',7,0,9,'xyz"}'].map(response=>'data: '+JSON.stringify({response})+'\n\n').join('')+'data: [DONE]\n\n';
+ const p=new WorkersAIProvider({run:async()=>sse(wire)});const events:any[]=await collect(p.stream(request,new AbortController().signal));
+ expect(JSON.parse(events.filter(x=>x.type==='delta').map(x=>x.text).join('')).digest).toBe(digest);
+});
