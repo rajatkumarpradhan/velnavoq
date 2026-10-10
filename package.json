@@ -18,7 +18,8 @@
     "target:build": "wrangler deploy --config deployment-target/wrangler.jsonc --dry-run --outdir ../target-dist",
     "quota:evidence": "node scripts/quota-evidence.mjs",
     "qa": "node scripts/qa-run.mjs all",
-    "qa:report": "node scripts/qa-run.mjs report"
+    "qa:report": "node scripts/qa-run.mjs report",
+    "backup:drill": "python3 scripts/restore-drill.py"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
