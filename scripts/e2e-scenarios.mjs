@@ -115,7 +115,7 @@ finally{
 const tests={};for(const r of results){(tests[r.test]=tests[r.test]||[]).push(r)}
 const summary=Object.entries(tests).map(([t,steps])=>({test:t,status:steps.some(s=>s.status==='FAIL')?'FAIL':'PASS',pass:steps.filter(s=>s.status==='PASS').length,notRun:steps.filter(s=>s.status==='NOT RUN').length,fail:steps.filter(s=>s.status==='FAIL').length,steps}));
 const fails=results.filter(r=>r.status==='FAIL').length;
-writeFileSync('e2e-results.json',JSON.stringify({generatedAt:started,finishedAt:new Date().toISOString(),environment:'local workerd + D1 + Chromium, built production UI, two-host preview, local deployment target',summary,results},null,1));
+writeFileSync('e2e-results.json',JSON.stringify({generatedAt:started,finishedAt:new Date().toISOString(),environment:'local workerd + D1 + Chromium, built production UI, two-host preview, local deployment target',summary,results},null,1)+'\n');
 console.log(fails?'E2E FAIL '+fails+' failures':'E2E PASS '+results.filter(r=>r.status==='PASS').length+' steps, '+results.filter(r=>r.status==='NOT RUN').length+' NOT RUN, 0 failures');
 await browser?.close();vite.kill();await new Promise(r=>previewServer.close(r));await new Promise(r=>targetServer.close(r));await new Promise(r=>server.close(r));await mf.dispose();
 if(fails)process.exit(1)}
