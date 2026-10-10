@@ -33,3 +33,5 @@ Local SQLite backup/restore: `python3 scripts/check-backup.py` tests exact SQL e
 
 ## Abuse and cost control (Part 24)
 Quotas, budgets, cooldowns and user messages: see `ABUSE-CONTROL.md`. Registry: `src/quota.ts`.
+
+Part 25: backup, restore and recovery: see [BACKUP-RECOVERY.md](BACKUP-RECOVERY.md). Run `npm run backup:drill` for the local restore drill.
