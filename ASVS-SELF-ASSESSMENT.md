@@ -6,33 +6,24 @@ The official release CSV contains **345 requirements in 17 chapters**: 70 introd
 
 | Introduced level | Pass (local scope only) | Fail | Not applicable | Not verified | Total |
 | --- | --- | --- | --- | --- | --- |
-| L1 | 32 | 12 | 10 | 16 | 70 |
-| Additional L2 | 32 | 17 | 49 | 85 | 183 |
+| L1 | 39 | 3 | 10 | 18 | 70 |
+| Additional L2 | 33 | 16 | 49 | 85 | 183 |
 | Additional L3 | 0 | 0 | 0 | 92 | 92 |
-| L1+L2 cumulative | 64 | 29 | 59 | 101 | 253 |
+| L1+L2 cumulative | 72 | 19 | 59 | 103 | 253 |
 
 Pass means the exact stated source/local boundary has evidence, not a broad production pass or formal proof. Fail means a required control is demonstrably absent/inconsistent in the current implementation. Not applicable requires a recorded feature/surface absence reason and must be revisited if scope changes. Not verified means insufficient whole-requirement evidence, including incomplete coverage, untested policy, cloud configuration or operator procedure. An implemented partial mitigation is not a pass. No percentage score is used.
 
-All 70 L1 and 183 additional L2 rows have a status/rationale. This does **not** mean every row's verification is complete: the 101 cumulative not-verified rows explicitly identify that it is not. The 29 cumulative failures block a Level 2 claim even before unresolved rows. Applicable scope and exclusions need independent review.
+All 70 L1 and 183 additional L2 rows have a status/rationale. This does **not** mean every row's verification is complete: the 103 cumulative not-verified rows explicitly identify that it is not. The 19 cumulative failures block a Level 2 claim even before unresolved rows. Applicable scope and exclusions need independent review.
 
-## Additional failed controls found during exact mapping
+## Remediation update
 
-- V3.3.1/V3.3.3: current Secure cookies lack required __Secure-/__Host- prefix.
-- V3.4.1: no verified one-year HSTS policy.
-- V6.2.2/V6.2.3/V6.2.4: no password change/current-password check/common-password screening.
-- V6.3.3 and related L2 requirements: MFA/recovery missing.
-- V7.2.4: login creates a new session but does not revoke the prior current session on reauthentication.
-- V7.3.1 and other L2 lifecycle controls: no idle timeout/concurrent-session policy/step-up-based session management.
-- V10.4.2: consumed authorization codes are rejected, but reuse does not revoke already-issued tokens.
-- V15.1.1/V15.2.1: risk-based dependency remediation timelines not established.
-- V16.2.1/V16.4.3: generic logs lack actor identity on every event; no separate forensic analysis/alert sink.
-- Literal sanitization controls for generated executable app content are not satisfied merely by sandboxing; compensating boundary is documented, not counted as literal compliance.
+Owner-approved follow-up fixes host-prefixed cookies, password change/current-password validation/3000-entry common screen, same-user current-session termination on login reauthentication, post-migration code-replay token revocation, and dependency-remediation timeline documentation. 382 backend tests/19 files pass plus 18 actual password-change browser checks. See SECURITY-REMEDIATION.md for exact evidence and exclusions.
 
-This reporting task does not silently alter auth/OAuth behavior. The open failed controls need a separate scoped remediation pass, integration/browser regression tests and cloud/operator verification where appropriate. Do not fabricate a certificate while these remain open.
+HSTS is implemented on HTTPS control/successful static target but the full production UI/edge response inventory remains **not verified**, not passed. Dependency deadline compliance likewise remains not verified despite a new documented policy. Other failures/not-verified rows remain open. Code-replay lineage applies only to tokens issued after migration; legacy consumed codes require operator revocation before rollout. No full level/certificate claim.
 
 ## Evidence and provenance
 
-Reviewed source is the Part20 published tree; current private repository source readback matches the assessment base. Tests: 367/18 files, both Worker dry-runs/TypeScript and dated npm audit 0. Supplemental registry signature and Gitleaks results are documented in [SECURITY-VERIFICATION.md](./SECURITY-VERIFICATION.md). Requirement tests/source references are in each CSV row; they support only the stated local scope. No Git history or production external-scanner scan was performed.
+Reviewed source is the Part20 published tree; current private repository source readback matches the assessment base. Tests: 382/19 files, both Worker dry-runs/TypeScript and dated npm audit 0. Supplemental registry signature and Gitleaks results are documented in [SECURITY-VERIFICATION.md](./SECURITY-VERIFICATION.md). Requirement tests/source references are in each CSV row; they support only the stated local scope. No Git history or production external-scanner scan was performed.
 
 Official requirement inventory used: https://github.com/OWASP/ASVS/releases/download/v5.0.0_release/OWASP_Application_Security_Verification_Standard_5.0.0_en.csv
 
