@@ -1,3 +1,4 @@
+import {blockedPasswords} from './password-blocklist';
 import { ApiError, type Bundle } from './contracts';
 const enc = new TextEncoder();
 export const hex = (b: ArrayBuffer) => Array.from(new Uint8Array(b), n=>n.toString(16).padStart(2,'0')).join('');
@@ -9,6 +10,7 @@ export async function passwordHash(password:string,salt:string):Promise<string> 
  return hex(await crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(salt),iterations:600000,hash:'SHA-256'},key,256));
 }
 export function validatePassword(p:unknown):string { if(typeof p!=='string'||p.length<14||p.length>128) throw new ApiError(400,'password_length_14_to_128'); return p; }
+export function validateNewPassword(p:unknown):string {const value=validatePassword(p);if(blockedPasswords.has(value))throw new ApiError(400,'common_password_denied');return value;}
 export function validateName(n:unknown):string { if(typeof n!=='string'||!n.trim()||n.length>100) throw new ApiError(400,'invalid_name'); return n.trim(); }
 export function validateEmail(e:unknown):string { if(typeof e!=='string'||e.length>254||! /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e))throw new ApiError(400,'invalid_email'); return e.toLowerCase().trim(); }
 export function canonical(v:unknown):string { if(v===null||typeof v!=='object')return JSON.stringify(v); if(Array.isArray(v))return '['+v.map(canonical).join(',')+']'; return '{'+Object.entries(v as Record<string,unknown>).sort(([a],[b])=>a.localeCompare(b)).map(([k,x])=>JSON.stringify(k)+':'+canonical(x)).join(',')+'}'; }
@@ -47,8 +49,8 @@ export function validateStructure(value:unknown):void {
 }
 /** A duplicate credential cookie must never select an attacker-chosen first value. */
 export function sessionToken(req:Request):string {
- const matches=(req.headers.get('cookie')||'').split(';').map(x=>x.trim()).filter(x=>x.startsWith('velnavoq_session='));
- if(matches.length!==1)throw new ApiError(401,'authentication_required');const token=matches[0]!.slice(17);
+ const matches=(req.headers.get('cookie')||'').split(';').map(x=>x.trim()).filter(x=>x.startsWith('__Host-velnavoq_session='));
+ if(matches.length!==1)throw new ApiError(401,'authentication_required');const token=matches[0]!.slice(24);
  if(!/^[0-9a-f]{64}$/.test(token))throw new ApiError(401,'authentication_required');return token;
 }
 
@@ -59,4 +61,4 @@ export function publicTarget(target:URL,control:URL):boolean {
  /^[a-z0-9.-]+$/.test(h)&&! /^\d+(?:\.\d+){3}$/.test(h)&&
  !['localhost','metadata.google.internal'].includes(h)&&! /\.(?:localhost|local|internal|test|invalid)$/.test(h)&&
  !target.port&&!target.username&&!target.password&&target.pathname==='/'&&!target.search&&!target.hash;
-                                                                             }
+}
