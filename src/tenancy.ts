@@ -1,6 +1,7 @@
-import {ApiError,type Env,type Identity,type Role} from './contracts';import {role,project} from './auth';import {readBody,validateEmail} from './security';
+import {ApiError,type Env,type Identity,type Role} from './contracts';import {role,project,changePassword} from './auth';import {readBody,validateEmail} from './security';
 export const roles:Role[]=['owner','editor','viewer'];
 export async function tenancy(req:Request,env:Env,who:Identity):Promise<Response|null>{const path=new URL(req.url).pathname,method=req.method;
+if(path==='/api/auth/password'&&method==='POST')return changePassword(req,env,who);
 if(path==='/api/sessions'&&method==='GET')return Response.json((await env.DB.prepare('SELECT token_hash,expires_at,created_at FROM sessions WHERE user_id=? AND expires_at>? ORDER BY created_at DESC').bind(who.userId,Math.floor(Date.now()/1000)).all()).results.map((s:any)=>({id:s.token_hash,current:s.token_hash===who.sessionHash,expiresAt:s.expires_at,createdAt:s.created_at})));
 const session=/^\/api\/sessions\/([a-f0-9]{64})$/.exec(path);if(session&&method==='DELETE'){const result=await env.DB.prepare('DELETE FROM sessions WHERE token_hash=? AND user_id=?').bind(session[1],who.userId).run();if(!result.meta.changes)throw new ApiError(404,'session_not_found');return Response.json({ok:true});}
 const members=/^\/api\/workspaces\/([^/]+)\/members(?:\/([^/]+))?$/.exec(path);if(members){const ws=members[1]!;await role(env,who.userId,ws,method==='GET'?roles:['owner']);
