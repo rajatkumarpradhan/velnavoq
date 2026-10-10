@@ -1,0 +1,21 @@
+import {describe,it,expect} from 'vitest';
+import {readFileSync} from 'node:fs';
+import {extractChangeArray} from '../src/coding-agent-planner';
+const fx=(n:string)=>readFileSync('tests/fixtures/model-outputs/'+n,'utf8');
+const change={path:'index.html',operation:'CREATE',previousDigest:null,content:'<h1>x</h1>',to:null,reason:'Build requested page',risk:'low'};
+describe('planner model-output extraction (real failure class: live Workers AI calls returned 422 agent_invalid_model_json on 2026-10-10; fixtures are labelled synthetic reproductions, see fixtures README)',()=>{
+ it('parses a bare JSON array exactly as before (strict fast path)',()=>{expect(extractChangeArray(JSON.stringify([change]),10)).toEqual([change])});
+ it('parses a pretty-printed bare array',()=>{expect(extractChangeArray(JSON.stringify([change],null,2),10)).toEqual([change])});
+ it('accepts a leading BOM before strict JSON',()=>{expect(extractChangeArray('\uFEFF'+JSON.stringify([change]),10)).toEqual([change])});
+ it('synthetic reproduction: fenced ```json block parses',()=>{const v=extractChangeArray(fx('qwen-coder-fenced-json.txt'),10) as any[];expect(v[0].path).toBe('index.html');expect(v[0].operation).toBe('CREATE')});
+ it('synthetic reproduction: preamble + fence + trailing prose parses; brackets inside string content do not break the span scan',()=>{const v=extractChangeArray(fx('qwen-coder-preamble-fence.txt'),10) as any[];expect(v).toHaveLength(1);expect(v[0].content).toContain('[ok]')});
+ it('unfenced JSON array embedded in prose parses via balanced span',()=>{const v=extractChangeArray('Sure! '+JSON.stringify([change])+' done.',10);expect(v).toEqual([change])});
+ it('first parseable array wins when several fences exist',()=>{const t='```json\nnot json\n```\n```json\n'+JSON.stringify([change])+'\n```';expect(extractChangeArray(t,10)).toEqual([change])});
+ it('synthetic reproduction: pure prose reply is still rejected',()=>{expect(()=>extractChangeArray(fx('qwen-coder-prose-no-json.txt'),10)).toThrow('agent_invalid_model_json')});
+ it('synthetic reproduction: truncated model output is still rejected',()=>{expect(()=>extractChangeArray(fx('qwen-coder-truncated.txt'),10)).toThrow('agent_invalid_model_json')});
+ it('empty and whitespace replies are rejected',()=>{for(const t of ['','   \n '])expect(()=>extractChangeArray(t,10)).toThrow('agent_invalid_model_json')});
+ it('a valid JSON object that is not an array is rejected',()=>{expect(()=>extractChangeArray('{"changes":[]}',10)).toThrow('agent_invalid_model_json')});
+ it('an over-limit array keeps the distinct agent_change_limit code (not masked as invalid json)',()=>{const many=Array.from({length:11},(_,i)=>({...change,path:'f'+i+'.html'}));expect(()=>extractChangeArray(JSON.stringify(many),10)).toThrow('agent_change_limit')});
+ it('an over-limit array inside a fence also reports agent_change_limit',()=>{const many=Array.from({length:5},(_,i)=>({...change,path:'f'+i+'.html'}));expect(()=>extractChangeArray('```json\n'+JSON.stringify(many)+'\n```',4)).toThrow('agent_change_limit')});
+ it('no eval or code execution: active content in prose is inert text',()=>{const t='```json\n'+JSON.stringify([change])+'\n```\n<script>alert(1)</script>';expect(extractChangeArray(t,10)).toEqual([change])});
+});
