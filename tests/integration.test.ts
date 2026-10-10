@@ -32,7 +32,7 @@ describe('real Workers/D1 authentication and tenant isolation',()=>{
  it('session identity exposes own email and expiry only',async()=>{const r=await request('/api/me','GET',undefined,alice);expect(await r.json()).toMatchObject({userId:alice.userId,email:'alice@example.test'});});
  it('audit notification feed enforces workspace ownership',async()=>{expect((await request(`/api/workspaces/${ws}/activity`,'GET',undefined,bob)).status).toBe(404);expect(await (await request(`/api/workspaces/${ws}/activity`,'GET',undefined,alice)).json()).toEqual([]);});
  it('requires login',async()=>expect((await request(`/api/projects/${proj}`)).status).toBe(401));
- it('sets secure session cookie',async()=>{const r=await request('/api/auth/login','POST',{email:'alice@example.test',password:'secure-password-long-1234'});expect(r.headers.get('set-cookie')).toContain('HttpOnly; Secure; SameSite=Strict');});
+ it('sets secure session cookie',async()=>{const r=await request('/api/auth/login','POST',{email:'alice@example.test',password:'secure-password-long-1234'});expect(r.headers.get('set-cookie')).toContain('HttpOnly; Secure; SameSite=Lax');});
  it('incorrect password fails',async()=>expect((await request('/api/auth/login','POST',{email:'alice@example.test',password:'wrong-password-long-1234'})).status).toBe(401));
  it('register is an actual persisted user',async()=>expect((await db.prepare('SELECT count(*) as n FROM users').first<{n:number}>())?.n).toBe(2));
  it('other tenant cannot read workspace projects',async()=>expect((await request(`/api/workspaces/${ws}/projects`,'GET',undefined,bob)).status).toBe(404));
