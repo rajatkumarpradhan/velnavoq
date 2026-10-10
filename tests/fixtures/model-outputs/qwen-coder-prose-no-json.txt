@@ -1,0 +1,3 @@
+I can help with that. The page would need an index.html with a heading and a
+small script. However, I will first describe the approach instead of returning
+the machine-readable change list, because explaining the design is helpful.
