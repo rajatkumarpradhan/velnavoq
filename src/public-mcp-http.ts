@@ -1,0 +1,4 @@
+import type {Env} from './contracts';
+export function publicMcpPath(path:string){return path==='/mcp'||path.startsWith('/.well-known/')||['/oauth/account/register','/oauth/account/token','/oauth/account/revoke'].includes(path)}
+export function publicCors(req:Request,res:Response){if(!publicMcpPath(new URL(req.url).pathname))return res;const h=new Headers(res.headers);h.set('access-control-allow-origin','*');h.set('access-control-allow-methods','GET, POST, OPTIONS');h.set('access-control-allow-headers','Authorization, Content-Type, Accept, MCP-Protocol-Version, Mcp-Method, Mcp-Name');h.set('access-control-expose-headers','WWW-Authenticate, MCP-Protocol-Version');return new Response(res.body,{status:res.status,headers:h});}
+export function mcpOriginAllowed(req:Request,env:Env){const o=req.headers.get('origin');return !o||o===new URL(env.APP_ORIGIN).origin||['https://grok.com','https://chatgpt.com','https://claude.ai'].includes(o)}
