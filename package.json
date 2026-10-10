@@ -16,6 +16,7 @@
     "ui:test": "node scripts/ui-check.mjs",
     "navigation:test": "npm run build && node scripts/navigation-check.mjs",
     "target:build": "wrangler deploy --config deployment-target/wrangler.jsonc --dry-run --outdir ../target-dist",
+    "quota:evidence": "node scripts/quota-evidence.mjs",
     "qa": "node scripts/qa-run.mjs all",
     "qa:report": "node scripts/qa-run.mjs report"
   },
