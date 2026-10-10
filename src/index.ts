@@ -1,3 +1,4 @@
+import {accountPublic,accountManage,accountEndpoint} from './account-mcp';
 import {backendApi} from './project-backend';
 import {observabilityApi,observeRequest} from './observability';
 import {deploymentApi} from './deployment';
@@ -26,14 +27,14 @@ async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>
  // Bound every read, including public metadata and telemetry-triggering failures.
  if(['GET','HEAD'].includes(method))await rateLimit(req,env,'reads',240);
  else await rateLimit(req,env,'incoming-writes',120);
- if(path==='/oauth/callback'){const callback=await oauthClient(req,env);if(callback)return callback;}const oauth=await oauthPublic(req,env);if(oauth)return oauth;const mcp=await mcpEndpoint(req,env);if(mcp)return mcp;
+ const accountOAuth=await accountPublic(req,env);if(accountOAuth)return accountOAuth;const accountRpc=await accountEndpoint(req,env);if(accountRpc)return accountRpc;if(path==='/oauth/callback'){const callback=await oauthClient(req,env);if(callback)return callback;}const oauth=await oauthPublic(req,env);if(oauth)return oauth;const mcp=await mcpEndpoint(req,env);if(mcp)return mcp;
  if(path==='/api/health'&&method==='GET')return Response.json({service:'velnavoq-control',status:'ok',runtime:'disabled',supportedStack:'static-web-v1'});
  if(path==='/api/auth/kdf'&&method==='POST')return kdfParams(req,env);
  if((path==='/api/auth/register'||path==='/api/auth/login')&&method==='POST'){const peek=await readBody(req.clone());if('verifier' in peek)return clientAuthenticate(req,env,path.endsWith('register'));return authenticate(req,env,path.endsWith('register'))}
  if(path==='/api/auth/mfa/verify'&&method==='POST'){const verified=await verifyMfaChallenge(req,env);return issueSession(env,verified.userId);}
  const accountRecovery=await accountRecoveryApi(req,env,ctx);if(accountRecovery)return accountRecovery;
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
- const mfa=await mfaApi(req,env,who);if(mfa)return mfa;const scope=/^\/api\/projects\/([^/]+)/.exec(path);if(scope){await project(env,who.userId,scope[1]!);env.OBS_PROJECT_ID=scope[1]!;}const observed=await observabilityApi(req,env,who);if(observed)return observed;
+ const accountManagement=await accountManage(req,env,who);if(accountManagement)return accountManagement;const mfa=await mfaApi(req,env,who);if(mfa)return mfa;const scope=/^\/api\/projects\/([^/]+)/.exec(path);if(scope){await project(env,who.userId,scope[1]!);env.OBS_PROJECT_ID=scope[1]!;}const observed=await observabilityApi(req,env,who);if(observed)return observed;
  if(method!=='GET')await rateLimit(req,env,'writes',60);{const qr=await quotaApi(req,env,who);if(qr)return qr;if(Math.random()<0.02)ctx.waitUntil(sweep(env).catch(()=>{}));await enforceRoute(env,who,method,path,/\/proposals$/.test(path)&&method==='POST'?(await req.clone().text()).length:0);}
  if(!['GET','HEAD'].includes(method)&&!path.includes('/environment')&&req.headers.get('content-type')?.startsWith('application/json')){let target=/^\/api\/projects\/([^/]+)/.exec(path)?.[1];const proposalId=/^\/api\/proposals\/([^/]+)/.exec(path)?.[1];if(proposalId)target=(await env.DB.prepare('SELECT project_id FROM proposals WHERE id=?').bind(proposalId).first<{project_id:string}>())?.project_id;if(target){await project(env,who.userId,target);await rejectEnvironmentLeak(env,target,canonical(await readBody(req.clone())))}}const backend=await backendApi(req,env,who);if(backend)return backend;const shipping=await deploymentApi(req,env,who,ctx);if(shipping)return shipping;const versioning=await versioningApi(req,env,who);if(versioning)return versioning;const projectRecovery=await recoveryApi(req,env,who);if(projectRecovery)return projectRecovery;const environment=await environmentApi(req,env,who);if(environment)return environment;const clientFlow=await oauthClient(req,env,who);if(clientFlow)return clientFlow;const human=await humanApproval(req,env,who);if(human)return human;const mcpManagement=await mcpManage(req,env,who);if(mcpManagement)return mcpManagement;
  const repairResponse=await repairApi(req,env,who);if(repairResponse)return repairResponse;
