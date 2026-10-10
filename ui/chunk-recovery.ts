@@ -1,0 +1,2 @@
+export function isChunkFailure(error:unknown){const text=error instanceof Error?error.message:String(error);return /Failed to fetch dynamically imported module|Importing a module script failed|Loading chunk .* failed|ChunkLoadError/i.test(text);}
+export function chunkRecovery(storage:Pick<Storage,'getItem'|'setItem'>,reload:()=>void){const key='velnavoq_chunk_reload';const last=Number(storage.getItem(key)||0);if(!last||Date.now()-last>300000){storage.setItem(key,String(Date.now()));reload();return 'reloading';}return 'show-reload';}
