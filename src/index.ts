@@ -1,3 +1,4 @@
+import {approvalInbox} from './approval-inbox';
 import {publicMcpPath,publicCors} from './public-mcp-http';
 import {accountPublic,accountManage,accountEndpoint} from './account-mcp';
 import {backendApi} from './project-backend';
@@ -17,7 +18,7 @@ import {aiApi} from './ai-api';
 import {persistence} from './persistence';
 import {tenancy} from './tenancy';
 import {quotaApi,enforceRoute,QuotaError,sweep} from './quota';import {ApiError,type Env,type Proposal} from './contracts';
-import {authenticate,identity,issueSession,project,rateLimit,role,IDLE_SECONDS} from './auth';
+import {authenticate,identity,issueSession,renewSession,project,rateLimit,role,IDLE_SECONDS} from './auth';
 import {mfaApi,verifyMfaChallenge} from './mfa';
 import {accountRecoveryApi} from './account-recovery';import {clientAuthenticate,kdfParams} from './client-auth';
 import {canonical,digest,readBody,validateBundle,validateName} from './security';
@@ -36,7 +37,7 @@ async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>
  if(path==='/api/auth/mfa/verify'&&method==='POST'){const verified=await verifyMfaChallenge(req,env);return issueSession(env,verified.userId);}
  const accountRecovery=await accountRecoveryApi(req,env,ctx);if(accountRecovery)return accountRecovery;
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
- const accountManagement=await accountManage(req,env,who);if(accountManagement)return accountManagement;const mfa=await mfaApi(req,env,who);if(mfa)return mfa;const scope=/^\/api\/projects\/([^/]+)/.exec(path);if(scope){await project(env,who.userId,scope[1]!);env.OBS_PROJECT_ID=scope[1]!;}const observed=await observabilityApi(req,env,who);if(observed)return observed;
+ const inbox=await approvalInbox(req,env,who);if(inbox)return inbox;const accountManagement=await accountManage(req,env,who);if(accountManagement)return accountManagement;const mfa=await mfaApi(req,env,who);if(mfa)return mfa;const scope=/^\/api\/projects\/([^/]+)/.exec(path);if(scope){await project(env,who.userId,scope[1]!);env.OBS_PROJECT_ID=scope[1]!;}const observed=await observabilityApi(req,env,who);if(observed)return observed;
  if(method!=='GET')await rateLimit(req,env,'writes',60);{const qr=await quotaApi(req,env,who);if(qr)return qr;if(Math.random()<0.02)ctx.waitUntil(sweep(env).catch(()=>{}));await enforceRoute(env,who,method,path,/\/proposals$/.test(path)&&method==='POST'?(await req.clone().text()).length:0);}
  if(!['GET','HEAD'].includes(method)&&!path.includes('/environment')&&req.headers.get('content-type')?.startsWith('application/json')){let target=/^\/api\/projects\/([^/]+)/.exec(path)?.[1];const proposalId=/^\/api\/proposals\/([^/]+)/.exec(path)?.[1];if(proposalId)target=(await env.DB.prepare('SELECT project_id FROM proposals WHERE id=?').bind(proposalId).first<{project_id:string}>())?.project_id;if(target){await project(env,who.userId,target);await rejectEnvironmentLeak(env,target,canonical(await readBody(req.clone())))}}const backend=await backendApi(req,env,who);if(backend)return backend;const shipping=await deploymentApi(req,env,who,ctx);if(shipping)return shipping;const versioning=await versioningApi(req,env,who);if(versioning)return versioning;const projectRecovery=await recoveryApi(req,env,who);if(projectRecovery)return projectRecovery;const environment=await environmentApi(req,env,who);if(environment)return environment;const clientFlow=await oauthClient(req,env,who);if(clientFlow)return clientFlow;const human=await humanApproval(req,env,who);if(human)return human;const mcpManagement=await mcpManage(req,env,who);if(mcpManagement)return mcpManagement;
  const repairResponse=await repairApi(req,env,who);if(repairResponse)return repairResponse;
@@ -48,7 +49,8 @@ async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>
  const aiResponse=await aiApi(req,env,who);if(aiResponse)return aiResponse;
  const persistedResponse=await persistence(req,env,who);if(persistedResponse)return persistedResponse;
  const tenantResponse=await tenancy(req,env,who);if(tenantResponse)return tenantResponse;
- if(path==='/api/auth/logout'&&method==='POST'){await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(who.sessionHash).run();const headers=new Headers();headers.append('set-cookie','__Host-velnavoq_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0');headers.append('set-cookie','__Host-velnavoq_csrf=; Secure; SameSite=Strict; Path=/; Max-Age=0');return Response.json({ok:true},{headers});}
+ if(path==='/api/auth/renew'&&method==='POST')return renewSession(req,env,who);
+ if(path==='/api/auth/logout'&&method==='POST'){await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(who.sessionHash).run();const headers=new Headers();headers.append('set-cookie','__Host-velnavoq_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0');headers.append('set-cookie','__Host-velnavoq_csrf=; Secure; SameSite=Lax; Path=/; Max-Age=0');return Response.json({ok:true},{headers});}
  if(path==='/api/me'&&method==='GET'){const u=await env.DB.prepare('SELECT email FROM users WHERE id=?').bind(who.userId).first<{email:string}>();const s=await env.DB.prepare('SELECT expires_at FROM sessions WHERE token_hash=?').bind(who.sessionHash).first<{expires_at:number}>();return Response.json({userId:who.userId,email:u?.email,expiresAt:s?.expires_at,idleTimeoutSeconds:IDLE_SECONDS});}
  const activity=/^\/api\/workspaces\/([^/]+)\/activity$/.exec(path);
  if(activity&&method==='GET'){await role(env,who.userId,activity[1]!);return Response.json((await env.DB.prepare('SELECT a.id,a.project_id,p.name as project_name,a.action,a.digest,a.created_at FROM audit_events a LEFT JOIN projects p ON p.id=a.project_id WHERE a.workspace_id=? ORDER BY a.id DESC LIMIT 100').bind(activity[1]).all()).results);}
