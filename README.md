@@ -30,3 +30,6 @@ The D1 ID in configuration is explicitly a local-only zero ID, not a claimed liv
 See `DECISIONS.md` for dated sources and remaining gates.
 
 Local SQLite backup/restore: `python3 scripts/check-backup.py` tests exact SQL equality, integrity, foreign keys and 0600 mode. `python3 scripts/backup-local.py SOURCE DESTINATION` refuses overwrite. This is local backup tooling, not encrypted remote disaster recovery.
+
+## Abuse and cost control (Part 24)
+Quotas, budgets, cooldowns and user messages: see `ABUSE-CONTROL.md`. Registry: `src/quota.ts`.
