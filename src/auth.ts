@@ -1,15 +1,16 @@
 import {ApiError,type Env,type Identity,type Project,type Role} from './contracts';
-import {checkOrigin,constantEqual,digest,passwordHash,randomToken,readBody,validateEmail,validatePassword} from './security';
+import {checkOrigin,constantEqual,digest,passwordHash,randomToken,readBody,validateEmail,validatePassword,sessionToken} from './security';
 const lifetime=86400;
 export async function rateLimit(req:Request,env:Env,scope:string,limit=10):Promise<void>{
  const address=req.headers.get('CF-Connecting-IP');if(!address&&new URL(env.APP_ORIGIN).hostname!=='localhost')throw new ApiError(503,'trusted_client_ip_missing');
+ if(address&&(address.length>45||! /^[0-9a-fA-F:.]+$/.test(address)))throw new ApiError(503,'trusted_client_ip_invalid');
  const key=await digest(scope+':'+(address||'local'));const window=Math.floor(Date.now()/60000);
+ await env.DB.prepare('DELETE FROM rate_limits WHERE window<?').bind(window-2).run();
  const row=await env.DB.prepare('INSERT INTO rate_limits(key_hash,window,count) VALUES(?,?,1) ON CONFLICT(key_hash) DO UPDATE SET count=CASE WHEN window=excluded.window THEN count+1 ELSE 1 END,window=excluded.window RETURNING count').bind(key,window).first<{count:number}>();
  if(!row||row.count>limit)throw new ApiError(429,'rate_limited');
 }
 export async function identity(req:Request,env:Env,write=false):Promise<Identity>{
- const cookie=req.headers.get('cookie')||'';const token=cookie.split(';').map(x=>x.trim()).find(x=>x.startsWith('velnavoq_session='))?.split('=')[1];
- if(!token||! /^[0-9a-f]{64}$/.test(token))throw new ApiError(401,'authentication_required');const sessionHash=await digest(token);
+ const token=sessionToken(req),sessionHash=await digest(token);
  const s=await env.DB.prepare('SELECT user_id,csrf_hash FROM sessions WHERE token_hash=? AND expires_at>?').bind(sessionHash,Math.floor(Date.now()/1000)).first<{user_id:string;csrf_hash:string}>();
  if(!s)throw new ApiError(401,'session_expired_or_revoked');
  if(write){checkOrigin(req,env.APP_ORIGIN);if(!constantEqual(await digest(req.headers.get('x-csrf-token')||''),s.csrf_hash))throw new ApiError(403,'csrf_denied');}
