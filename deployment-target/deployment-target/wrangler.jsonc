@@ -1,0 +1,4 @@
+{
+ "name":"velnavoq-static-releases", "main":"../src/deployment-target.ts", "compatibility_date":"2026-10-08", "workers_dev":false,
+ "d1_databases":[{"binding":"DB","database_name":"velnavoq-static-releases","database_id":"00000000-0000-0000-0000-000000000000"}]
+}
