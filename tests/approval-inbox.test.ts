@@ -1,0 +1,2 @@
+import {it,expect} from 'vitest';import {pollDelay,inboxKey} from '../ui/approval-inbox';
+it('approval polling starts10s backs off max120s and order-invariant signatures track removals/digest',()=>{expect(pollDelay(0)).toBe(10000);expect(pollDelay(1)).toBe(20000);expect(pollDelay(10)).toBe(120000);const a:any={kind:'source',id:'a',digest:'d'},b:any={kind:'request',id:'b',digest:'e'};expect(inboxKey([a,b])).toBe(inboxKey([b,a]));expect(inboxKey([a,b])).not.toBe(inboxKey([a]));});
