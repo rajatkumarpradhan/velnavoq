@@ -1,5 +1,5 @@
 import {ApiError,type Env,type Identity,type Project,type Role} from './contracts';
-import {checkOrigin,constantEqual,digest,passwordHash,randomToken,readBody,validateEmail,validatePassword,sessionToken} from './security';
+import {checkOrigin,constantEqual,digest,passwordHash,randomToken,readBody,validateEmail,validatePassword,validateNewPassword,sessionToken} from './security';
 const lifetime=86400;
 export async function rateLimit(req:Request,env:Env,scope:string,limit=10):Promise<void>{
  const address=req.headers.get('CF-Connecting-IP');if(!address&&new URL(env.APP_ORIGIN).hostname!=='localhost')throw new ApiError(503,'trusted_client_ip_missing');
@@ -29,11 +29,29 @@ export async function authenticate(req:Request,env:Env,register:boolean):Promise
  const app=new URL(env.APP_ORIGIN);if(app.hostname!=='localhost'||new URL(req.url).hostname!=='localhost')throw new ApiError(503,'production_identity_not_configured');
  await rateLimit(req,env,'auth');
  if(register&&env.REGISTRATION_ENABLED!=='true')throw new ApiError(403,'registration_closed');
- const b=await readBody(req),email=validateEmail(b.email),password=validatePassword(b.password);let userId:string;
+ const b=await readBody(req),email=validateEmail(b.email),password=register?validateNewPassword(b.password):validatePassword(b.password);let userId:string;
  if(register){userId=crypto.randomUUID();const salt=randomToken(),hash=await passwordHash(password,salt);try{await env.DB.prepare('INSERT INTO users(id,email,password_hash,password_salt,created_at) VALUES(?,?,?,?,?)').bind(userId,email,hash,salt,Date.now()).run();}catch{throw new ApiError(409,'account_not_created');}}
  else{const u=await env.DB.prepare('SELECT id,password_hash,password_salt FROM users WHERE email=?').bind(email).first<{id:string;password_hash:string;password_salt:string}>();
  const hash=await passwordHash(password,u?.password_salt||'authentication-timing-padding');if(!u||!constantEqual(hash,u.password_hash))throw new ApiError(401,'invalid_credentials');userId=u.id;}
  const token=randomToken(),csrf=randomToken(),now=Math.floor(Date.now()/1000);
- await env.DB.prepare('INSERT INTO sessions(token_hash,user_id,csrf_hash,expires_at,created_at) VALUES(?,?,?,?,?)').bind(await digest(token),userId,await digest(csrf),now+lifetime,now).run();
- const headers=new Headers();headers.append('set-cookie',`velnavoq_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${lifetime}`);headers.append('set-cookie',`velnavoq_csrf=${csrf}; Secure; SameSite=Strict; Path=/; Max-Age=${lifetime}`);return Response.json({userId,csrfToken:csrf,expiresAt:now+lifetime},{headers});
+ const create=env.DB.prepare('INSERT INTO sessions(token_hash,user_id,csrf_hash,expires_at,created_at) VALUES(?,?,?,?,?)').bind(await digest(token),userId,await digest(csrf),now+lifetime,now);
+ let oldHash:string|null=null;if(!register&&req.headers.has('cookie')){try{oldHash=await digest(sessionToken(req))}catch{/* malformed/legacy credential cannot select a session to terminate */}}
+ if(oldHash)await env.DB.batch([env.DB.prepare('DELETE FROM sessions WHERE token_hash=? AND user_id=?').bind(oldHash,userId),create]);else await create.run();
+ const headers=new Headers();headers.append('set-cookie',`__Host-velnavoq_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${lifetime}`);headers.append('set-cookie',`__Host-velnavoq_csrf=${csrf}; Secure; SameSite=Strict; Path=/; Max-Age=${lifetime}`);return Response.json({userId,csrfToken:csrf,expiresAt:now+lifetime},{headers});
+}
+
+/** Local reference identity only. Exact old/new password, transactional session termination. */
+export async function changePassword(req:Request,env:Env,who:Identity):Promise<Response>{
+ if(new URL(env.APP_ORIGIN).hostname!=='localhost'||new URL(req.url).hostname!=='localhost')throw new ApiError(503,'production_identity_not_configured');
+ await rateLimit(req,env,'password-change',5);const b=await readBody(req);
+ if(Object.keys(b).sort().join(',')!=='currentPassword,newPassword')throw new ApiError(400,'password_change_fields_denied');
+ const current=validatePassword(b.currentPassword),next=validateNewPassword(b.newPassword);
+ const u=await env.DB.prepare('SELECT password_hash,password_salt FROM users WHERE id=?').bind(who.userId).first<{password_hash:string;password_salt:string}>();
+ if(!u||!constantEqual(await passwordHash(current,u.password_salt),u.password_hash))throw new ApiError(401,'invalid_credentials');
+ if(constantEqual(current,next))throw new ApiError(400,'new_password_must_differ');
+ const salt=randomToken(),hash=await passwordHash(next,salt);
+ // Optimistic old-hash guard makes concurrent password changes fail atomically.
+ await env.DB.batch([env.DB.prepare('UPDATE users SET password_hash=?,password_salt=? WHERE id=? AND password_hash=?').bind(hash,salt,who.userId,u.password_hash),env.DB.prepare('INSERT INTO password_change_guard(user_id,expected_hash) VALUES(?,?)').bind(who.userId,hash),env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(who.userId),env.DB.prepare('DELETE FROM password_change_guard WHERE user_id=?').bind(who.userId)]);
+ const headers=new Headers();for(const name of ['__Host-velnavoq_session','__Host-velnavoq_csrf'])headers.append('set-cookie',name+'=; Secure; SameSite=Strict; Path=/; Max-Age=0'+(name.endsWith('session')?'; HttpOnly':''));
+ return Response.json({changed:true,reauthenticationRequired:true},{headers});
 }
