@@ -13,13 +13,17 @@ The official release CSV contains **345 requirements in 17 chapters**: 70 introd
 
 Pass means the exact stated source/local boundary has evidence, not a broad production pass or formal proof. Fail means a required control is demonstrably absent/inconsistent in the current implementation. Not applicable requires a recorded feature/surface absence reason and must be revisited if scope changes. Not verified means insufficient whole-requirement evidence, including incomplete coverage, untested policy, cloud configuration or operator procedure. An implemented partial mitigation is not a pass. No percentage score is used.
 
-All 70 L1 and 183 additional L2 rows have a status/rationale. This does **not** mean every row's verification is complete: the 103 cumulative not-verified rows explicitly identify that it is not. The 19 cumulative failures block a Level 2 claim even before unresolved rows. Applicable scope and exclusions need independent review.
+All 70 L1 and 183 additional L2 rows have a status/rationale. This does **not** mean every row's verification is complete: the 103 cumulative not-verified rows explicitly identify that it is not. After the Part 28 hardening (below) 14 cumulative failures remain and still block a Level 2 claim even before unresolved rows. Applicable scope and exclusions need independent review.
 
 ## Remediation update
 
 Owner-approved follow-up fixes host-prefixed cookies, password change/current-password validation/3000-entry common screen, same-user current-session termination on login reauthentication, post-migration code-replay token revocation, and dependency-remediation timeline documentation. 382 backend tests/19 files pass plus 18 actual password-change browser checks. See SECURITY-REMEDIATION.md for exact evidence and exclusions.
 
 HSTS is implemented on HTTPS control/successful static target but the full production UI/edge response inventory remains **not verified**, not passed. Dependency deadline compliance likewise remains not verified despite a new documented policy. Other failures/not-verified rows remain open. Code-replay lineage applies only to tokens issued after migration; legacy consumed codes require operator revocation before rollout. No full level/certificate claim.
+
+## Part 28 remediation update
+
+Part 28 closed six failures in local source/test scope: TOTP MFA with encrypted secret custody, replay protection and one-time recovery codes (V6.3.3, V6.4.4); single-use hashed password reset tokens that never bypass MFA (V6.4.3); documented and enforced 30-minute idle / 24h absolute session timeouts (V7.1.1, V7.3.1); and all-session termination on factor change/reset (V7.4.3). L1+L2 status now: 78 pass, 14 fail, 58 not applicable, 103 not verified. Evidence: tests/part28-security.test.ts (23 executed tests) and PART28-SECURITY-HARDENING.md. Production delivery of reset tokens (email provider) and public-identity verification remain NOT RUN; public sign-up and sign-in stay disabled by design. No full level/certificate claim.
 
 ## Evidence and provenance
 
