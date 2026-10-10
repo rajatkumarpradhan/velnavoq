@@ -1,0 +1,519 @@
+{
+ "generatedAt": "2026-10-10T05:00:09.143Z",
+ "finishedAt": "2026-10-10T05:00:28.777Z",
+ "environment": "local workerd + D1 + Chromium, built production UI, two-host preview, local deployment target",
+ "summary": [
+  {
+   "test": "TEST 1",
+   "status": "PASS",
+   "pass": 5,
+   "notRun": 0,
+   "fail": 0,
+   "steps": [
+    {
+     "test": "TEST 1",
+     "step": "register new user via API",
+     "status": "PASS",
+     "detail": "session issued"
+    },
+    {
+     "test": "TEST 1",
+     "step": "create workspace",
+     "status": "PASS",
+     "detail": "829266e3-4630-4f69-b7b1-6c53705a6d1b"
+    },
+    {
+     "test": "TEST 1",
+     "step": "create project",
+     "status": "PASS",
+     "detail": "fe51a3eb-85ce-4787-aee4-da2a62b4f67c"
+    },
+    {
+     "test": "TEST 1",
+     "step": "sign in through the real UI form",
+     "status": "PASS",
+     "detail": "form sign-in reaches app shell"
+    },
+    {
+     "test": "TEST 1",
+     "step": "project reachable in UI",
+     "status": "PASS",
+     "detail": "project build panel renders"
+    }
+   ]
+  },
+  {
+   "test": "TEST 2",
+   "status": "PASS",
+   "pass": 4,
+   "notRun": 1,
+   "fail": 0,
+   "steps": [
+    {
+     "test": "TEST 2",
+     "step": "prompt sent to AI request endpoint",
+     "status": "PASS",
+     "detail": "fail-closed 503 ai_provider_not_connected"
+    },
+    {
+     "test": "TEST 2",
+     "step": "AI model generates files from prompt",
+     "status": "NOT RUN",
+     "detail": "no AI provider connected (free-only, no key); endpoint verified fail-closed above"
+    },
+    {
+     "test": "TEST 2",
+     "step": "files produced through the validated agent patch path",
+     "status": "PASS",
+     "detail": "hello.html approved at revision 2"
+    },
+    {
+     "test": "TEST 2",
+     "step": "real browser build succeeds",
+     "status": "PASS",
+     "detail": "Build static app -> succeeded"
+    },
+    {
+     "test": "TEST 2",
+     "step": "two-host preview renders built app",
+     "status": "PASS",
+     "detail": "separate origin preview ready"
+    }
+   ]
+  },
+  {
+   "test": "TEST 3",
+   "status": "PASS",
+   "pass": 4,
+   "notRun": 1,
+   "fail": 0,
+   "steps": [
+    {
+     "test": "TEST 3",
+     "step": "inject intentional build error",
+     "status": "PASS",
+     "detail": "broken app.js approved"
+    },
+    {
+     "test": "TEST 3",
+     "step": "build fails with real diagnostic",
+     "status": "PASS",
+     "detail": "failed, exit 1, syntax diagnostic"
+    },
+    {
+     "test": "TEST 3",
+     "step": "repair session bound to the failure",
+     "status": "PASS",
+     "detail": "propose fail-closed 503 repair_ai_provider_not_connected"
+    },
+    {
+     "test": "TEST 3",
+     "step": "AI repair generates the fix",
+     "status": "NOT RUN",
+     "detail": "no repair AI provider connected (free-only); propose verified fail-closed above"
+    },
+    {
+     "test": "TEST 3",
+     "step": "corrective patch applied and rebuild succeeds",
+     "status": "PASS",
+     "detail": "rebuild succeeded after repair"
+    }
+   ]
+  },
+  {
+   "test": "TEST 4",
+   "status": "PASS",
+   "pass": 3,
+   "notRun": 0,
+   "fail": 0,
+   "steps": [
+    {
+     "test": "TEST 4",
+     "step": "editor save creates auto-approved revision",
+     "status": "PASS",
+     "detail": "revision 5"
+    },
+    {
+     "test": "TEST 4",
+     "step": "build after editor save succeeds",
+     "status": "PASS",
+     "detail": "build succeeded"
+    },
+    {
+     "test": "TEST 4",
+     "step": "built artifact contains the edited file",
+     "status": "PASS",
+     "detail": "hello.html in ZIP has manual edit"
+    }
+   ]
+  },
+  {
+   "test": "TEST 5",
+   "status": "PASS",
+   "pass": 3,
+   "notRun": 0,
+   "fail": 0,
+   "steps": [
+    {
+     "test": "TEST 5",
+     "step": "register MCP client and authorize with PKCE consent",
+     "status": "PASS",
+     "detail": "client authorized, token issued"
+    },
+    {
+     "test": "TEST 5",
+     "step": "authorized MCP tool call returns real project",
+     "status": "PASS",
+     "detail": "velnavoq.project returned exact project"
+    },
+    {
+     "test": "TEST 5",
+     "step": "revoke token denies further calls",
+     "status": "PASS",
+     "detail": "revoked token -> 401"
+    }
+   ]
+  },
+  {
+   "test": "TEST 6",
+   "status": "PASS",
+   "pass": 2,
+   "notRun": 0,
+   "fail": 0,
+   "steps": [
+    {
+     "test": "TEST 6",
+     "step": "create masked secret and build",
+     "status": "PASS",
+     "detail": "masked SERVICE_TOKEN created, build succeeded"
+    },
+    {
+     "test": "TEST 6",
+     "step": "secret never reaches API, build log or artifact",
+     "status": "PASS",
+     "detail": "canary absent from API, log, ZIP, context"
+    }
+   ]
+  },
+  {
+   "test": "TEST 7",
+   "status": "PASS",
+   "pass": 3,
+   "notRun": 1,
+   "fail": 0,
+   "steps": [
+    {
+     "test": "TEST 7",
+     "step": "pin immutable source release",
+     "status": "PASS",
+     "detail": "release v1 pinned"
+    },
+    {
+     "test": "TEST 7",
+     "step": "deploy to local target with real health check",
+     "status": "PASS",
+     "detail": "release local-http"
+    },
+    {
+     "test": "TEST 7",
+     "step": "health check: served release matches published bytes",
+     "status": "PASS",
+     "detail": "http://127.0.0.1:5192/r/cf7dbc26-e901-4feb-9e3f-ad44563dbf5e/index.html"
+    },
+    {
+     "test": "TEST 7",
+     "step": "public app on the internet",
+     "status": "NOT RUN",
+     "detail": "no public deployment exists (free-only, workers_dev off, no domain); local HTTP release URL verified above"
+    }
+   ]
+  },
+  {
+   "test": "TEST 8",
+   "status": "PASS",
+   "pass": 2,
+   "notRun": 0,
+   "fail": 0,
+   "steps": [
+    {
+     "test": "TEST 8",
+     "step": "deploy a second (bad) release",
+     "status": "PASS",
+     "detail": "bad release live at target"
+    },
+    {
+     "test": "TEST 8",
+     "step": "rollback restores exact known-good bytes",
+     "status": "PASS",
+     "detail": "routing repointed to known-good bytes"
+    }
+   ]
+  },
+  {
+   "test": "TEST 9",
+   "status": "PASS",
+   "pass": 4,
+   "notRun": 0,
+   "fail": 0,
+   "steps": [
+    {
+     "test": "TEST 9",
+     "step": "second user registered in separate tenant",
+     "status": "PASS",
+     "detail": "user B ready"
+    },
+    {
+     "test": "TEST 9",
+     "step": "user B denied every access to user A project",
+     "status": "PASS",
+     "detail": "read project:404 inject patch:404 read versions:404 read environment:404 start build:404"
+    },
+    {
+     "test": "TEST 9",
+     "step": "user B MCP authorize for user A project refused",
+     "status": "PASS",
+     "detail": "oauth 400, B workspace list clean"
+    },
+    {
+     "test": "TEST 9",
+     "step": "user A session restored",
+     "status": "PASS",
+     "detail": "user A back"
+    }
+   ]
+  },
+  {
+   "test": "TEST 10",
+   "status": "PASS",
+   "pass": 2,
+   "notRun": 0,
+   "fail": 0,
+   "steps": [
+    {
+     "test": "TEST 10",
+     "step": "malicious approved patch deployed to preview sandbox",
+     "status": "PASS",
+     "detail": "storage/parent/cookie blocked, 0 privileged calls, runtime_error surfaced"
+    },
+    {
+     "test": "TEST 10",
+     "step": "terminal rejects shell/network/secret commands",
+     "status": "PASS",
+     "detail": "curl/dotenv/parent-path all 400"
+    }
+   ]
+  }
+ ],
+ "results": [
+  {
+   "test": "TEST 1",
+   "step": "register new user via API",
+   "status": "PASS",
+   "detail": "session issued"
+  },
+  {
+   "test": "TEST 1",
+   "step": "create workspace",
+   "status": "PASS",
+   "detail": "829266e3-4630-4f69-b7b1-6c53705a6d1b"
+  },
+  {
+   "test": "TEST 1",
+   "step": "create project",
+   "status": "PASS",
+   "detail": "fe51a3eb-85ce-4787-aee4-da2a62b4f67c"
+  },
+  {
+   "test": "TEST 1",
+   "step": "sign in through the real UI form",
+   "status": "PASS",
+   "detail": "form sign-in reaches app shell"
+  },
+  {
+   "test": "TEST 1",
+   "step": "project reachable in UI",
+   "status": "PASS",
+   "detail": "project build panel renders"
+  },
+  {
+   "test": "TEST 2",
+   "step": "prompt sent to AI request endpoint",
+   "status": "PASS",
+   "detail": "fail-closed 503 ai_provider_not_connected"
+  },
+  {
+   "test": "TEST 2",
+   "step": "AI model generates files from prompt",
+   "status": "NOT RUN",
+   "detail": "no AI provider connected (free-only, no key); endpoint verified fail-closed above"
+  },
+  {
+   "test": "TEST 2",
+   "step": "files produced through the validated agent patch path",
+   "status": "PASS",
+   "detail": "hello.html approved at revision 2"
+  },
+  {
+   "test": "TEST 2",
+   "step": "real browser build succeeds",
+   "status": "PASS",
+   "detail": "Build static app -> succeeded"
+  },
+  {
+   "test": "TEST 2",
+   "step": "two-host preview renders built app",
+   "status": "PASS",
+   "detail": "separate origin preview ready"
+  },
+  {
+   "test": "TEST 3",
+   "step": "inject intentional build error",
+   "status": "PASS",
+   "detail": "broken app.js approved"
+  },
+  {
+   "test": "TEST 3",
+   "step": "build fails with real diagnostic",
+   "status": "PASS",
+   "detail": "failed, exit 1, syntax diagnostic"
+  },
+  {
+   "test": "TEST 3",
+   "step": "repair session bound to the failure",
+   "status": "PASS",
+   "detail": "propose fail-closed 503 repair_ai_provider_not_connected"
+  },
+  {
+   "test": "TEST 3",
+   "step": "AI repair generates the fix",
+   "status": "NOT RUN",
+   "detail": "no repair AI provider connected (free-only); propose verified fail-closed above"
+  },
+  {
+   "test": "TEST 3",
+   "step": "corrective patch applied and rebuild succeeds",
+   "status": "PASS",
+   "detail": "rebuild succeeded after repair"
+  },
+  {
+   "test": "TEST 4",
+   "step": "editor save creates auto-approved revision",
+   "status": "PASS",
+   "detail": "revision 5"
+  },
+  {
+   "test": "TEST 4",
+   "step": "build after editor save succeeds",
+   "status": "PASS",
+   "detail": "build succeeded"
+  },
+  {
+   "test": "TEST 4",
+   "step": "built artifact contains the edited file",
+   "status": "PASS",
+   "detail": "hello.html in ZIP has manual edit"
+  },
+  {
+   "test": "TEST 5",
+   "step": "register MCP client and authorize with PKCE consent",
+   "status": "PASS",
+   "detail": "client authorized, token issued"
+  },
+  {
+   "test": "TEST 5",
+   "step": "authorized MCP tool call returns real project",
+   "status": "PASS",
+   "detail": "velnavoq.project returned exact project"
+  },
+  {
+   "test": "TEST 5",
+   "step": "revoke token denies further calls",
+   "status": "PASS",
+   "detail": "revoked token -> 401"
+  },
+  {
+   "test": "TEST 6",
+   "step": "create masked secret and build",
+   "status": "PASS",
+   "detail": "masked SERVICE_TOKEN created, build succeeded"
+  },
+  {
+   "test": "TEST 6",
+   "step": "secret never reaches API, build log or artifact",
+   "status": "PASS",
+   "detail": "canary absent from API, log, ZIP, context"
+  },
+  {
+   "test": "TEST 7",
+   "step": "pin immutable source release",
+   "status": "PASS",
+   "detail": "release v1 pinned"
+  },
+  {
+   "test": "TEST 7",
+   "step": "deploy to local target with real health check",
+   "status": "PASS",
+   "detail": "release local-http"
+  },
+  {
+   "test": "TEST 7",
+   "step": "health check: served release matches published bytes",
+   "status": "PASS",
+   "detail": "http://127.0.0.1:5192/r/cf7dbc26-e901-4feb-9e3f-ad44563dbf5e/index.html"
+  },
+  {
+   "test": "TEST 7",
+   "step": "public app on the internet",
+   "status": "NOT RUN",
+   "detail": "no public deployment exists (free-only, workers_dev off, no domain); local HTTP release URL verified above"
+  },
+  {
+   "test": "TEST 8",
+   "step": "deploy a second (bad) release",
+   "status": "PASS",
+   "detail": "bad release live at target"
+  },
+  {
+   "test": "TEST 8",
+   "step": "rollback restores exact known-good bytes",
+   "status": "PASS",
+   "detail": "routing repointed to known-good bytes"
+  },
+  {
+   "test": "TEST 9",
+   "step": "second user registered in separate tenant",
+   "status": "PASS",
+   "detail": "user B ready"
+  },
+  {
+   "test": "TEST 9",
+   "step": "user B denied every access to user A project",
+   "status": "PASS",
+   "detail": "read project:404 inject patch:404 read versions:404 read environment:404 start build:404"
+  },
+  {
+   "test": "TEST 9",
+   "step": "user B MCP authorize for user A project refused",
+   "status": "PASS",
+   "detail": "oauth 400, B workspace list clean"
+  },
+  {
+   "test": "TEST 9",
+   "step": "user A session restored",
+   "status": "PASS",
+   "detail": "user A back"
+  },
+  {
+   "test": "TEST 10",
+   "step": "malicious approved patch deployed to preview sandbox",
+   "status": "PASS",
+   "detail": "storage/parent/cookie blocked, 0 privileged calls, runtime_error surfaced"
+  },
+  {
+   "test": "TEST 10",
+   "step": "terminal rejects shell/network/secret commands",
+   "status": "PASS",
+   "detail": "curl/dotenv/parent-path all 400"
+  }
+ ]
+}
