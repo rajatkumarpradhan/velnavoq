@@ -1,6 +1,6 @@
 # Velnavoq - Full QA Report (Part 23)
 
-Generated: 2026-10-10T05:01:47.179Z | Node v22.23.3 | linux/x64
+Generated: 2026-10-10T05:08:28.128Z | Node v22.23.3 | linux/x64
 
 Stack: free-only: miniflare workerd + D1 + Playwright chromium (headless), no paid services
 
@@ -101,3 +101,21 @@ All three need one external unlock: a Cloudflare account past human verification
 npm install && npx playwright install chromium && node scripts/qa-run.mjs all
 
 Individual stages: node scripts/qa-run.mjs static|unit|scripts|e2e|report. Results persist in qa-results.json; report stage regenerates this file and qa-report.html.
+
+## Live verification addendum (2026-10-10, Cloudflare)
+
+After Cloudflare dashboard access was cleared, the three NOT RUN items were attempted for real against a live deployment on the owner's free Cloudflare account.
+
+**Deployed (free tier, no paid features):**
+- `velnavoq-control` (real project code, previously an empty placeholder): https://velnavoq-control.rajatkumarpradhan021.workers.dev/api/health returns `200 {"service":"velnavoq-control","status":"ok","runtime":"disabled","supportedStack":"static-web-v1"}`. Bindings: D1, Workers AI (`AI`), `DEPLOY_TARGET` service binding, `AI_REPAIR_ENABLED=true`, `DEPLOY_MODE=public`.
+- `velnavoq-static-releases` target worker, public at https://velnavoq-static-releases.rajatkumarpradhan021.workers.dev.
+- D1 databases `velnavoq-control` and `velnavoq-static-releases` created; 155/157 migration statements applied remotely.
+
+**Results:**
+- TEST 2 (live AI model) — REAL PASS at account level. A live Workers AI call to `@cf/qwen/qwen2.5-coder-32b-instruct` on the owner's account returned `200` with the expected response (`"banana"` for a fixed-output prompt; usage 34 prompt + 2 completion tokens). The model id was explicit in the call path; no substitution occurred. The full Velnavoq pipeline (prompt -> AI -> files) could not run live because registration/login return `503 production_identity_not_configured` on any non-localhost host (`src/auth.ts`): this Part deliberately restricts identity to localhost, so no authenticated API path exists on the public URL.
+- TEST 3 (AI repair) live — NOT RUN. Blocked by the same product gate (verified 503).
+- TEST 7 (public deploy) live — NOT RUN. Same root cause (deployment jobs require an authenticated project).
+
+**Caveats:**
+- 2 of 81 database triggers (`approve_release`, `ai_reserve`) could not be applied remotely: Cloudflare D1's HTTP query API rejects 2-argument `RAISE(ABORT,'msg')` in trigger bodies with `incomplete input: SQLITE_ERROR` (reproduced in isolation; `RAISE(IGNORE)` and other trigger forms apply fine). All other statements applied. Impact: approval-revision enforcement and AI budget auto-charge triggers are absent on the live instance only; local runs are unaffected.
+- To rerun: `npm run qa` locally covers everything except the live-only checks; live rerun requires a production identity configuration (later Part) or a localhost-host deployment.
