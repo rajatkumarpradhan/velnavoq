@@ -107,3 +107,7 @@ Deliverables should name the assessed commit/environment/date, coverage and excl
 - Qualys SSL Labs: https://www.ssllabs.com/ssltest/
 - Gitleaks commands/releases: https://github.com/gitleaks/gitleaks
 - Scanner release used locally: https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1
+
+## Requirement-level gate added after Part20
+
+See [ASVS-SELF-ASSESSMENT.md](./ASVS-SELF-ASSESSMENT.md) and its editable CSV. Exact official inventory is 345 rows, including 70 L1 and 183 additional L2. Source/local self-assessment has 12 L1 failures/16 L1 not-verified and 17 additional L2 failures/85 additional L2 not-verified. No full level passes. Implement and retest failed controls, then gather the missing deployment/operator evidence before any assurance claim. A source-level pass in a row is not a production attestation.
