@@ -9,6 +9,9 @@ export type Windowed='minute'|'hour'|'day';
 export interface Limit{scope:Scope;window:Windowed|'total';limit:number;label:string;threat:string}
 const MIB=1024*1024;
 export const LIMITS={
+ 'exports.day':{scope:'project',window:'day',limit:20,label:'project exports',threat:'storage and network abuse'},
+ 'imports.day':{scope:'workspace',window:'day',limit:10,label:'project imports',threat:'storage abuse'},
+ 'recovery.sweeps.hour':{scope:'project',window:'hour',limit:30,label:'job recovery checks',threat:'CPU abuse'},
  'requests.minute':{scope:'user',window:'minute',limit:300,label:'requests',threat:'network abuse'},
  'workspaces.total':{scope:'user',window:'total',limit:5,label:'workspaces you own',threat:'user quota'},
  'storage.bytes.user':{scope:'user',window:'total',limit:100*MIB,label:'bytes of stored source and build output across your workspaces',threat:'storage abuse'},
