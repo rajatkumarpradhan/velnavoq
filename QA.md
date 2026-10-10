@@ -86,15 +86,15 @@ Rule followed: every PASS below comes from an actual execution in this run. Anyt
 - Live AI model generation (TEST 2) and AI-generated repair (TEST 3): NOT RUN - no AI provider key on a free-only stack. Verified instead: both endpoints fail closed with 503 ai_provider_not_connected / repair_ai_provider_not_connected, and the validated patch path + real browser build were exercised with equivalent fixtures.
 - Public internet deployment (TEST 7): NOT RUN - workers_dev/custom domain unavailable free-only. Verified instead: pinned release deployed to a local HTTP target with a real health check and byte-exact served content.
 
-## How to run the 3 NOT RUN steps after Cloudflare access is cleared
+## Correction from Part 27 (local source verification)
 
-All three need one external unlock: a Cloudflare account past human verification (free tier is enough). After that:
+The earlier claim that adding a Workers AI binding alone makes generation run was wrong. In the supplied Part 25 source, `/api/projects/:id/ai/requests` and `/api/projects/:id/agent/run` unconditionally returned 503. The AI workspace had no request form. Part 27 implements both endpoints as review-only proposal generation, a request form, and local account signup UI. Tests use a clearly labelled SSE binding double, not a real model.
 
-1. TEST 2 (live AI generation) and TEST 3 (AI repair): enable Workers AI on the Cloudflare account. In the control worker config (wrangler.jsonc) add the AI binding (ai = { binding = "AI" }) and set AI_REPAIR_ENABLED=true - the repair planner only activates when both are present (model @cf/qwen/qwen2.5-coder-32b-instruct via WorkersAIProvider, same gate on the generation endpoint). Mirror the same binding in the Miniflare bindings block inside scripts/e2e-scenarios.mjs so the local harness reaches it, then rerun: node scripts/e2e-scenarios.mjs. The two steps flip from NOT RUN to real executions of POST /api/projects/:id/ai/request and the repair propose flow.
-2. TEST 7 (public app): on the cleared Cloudflare account deploy the deployment-target worker for real: npx wrangler deploy --config deployment-target/wrangler.jsonc (gives a workers.dev URL or attach a custom domain). Set DEPLOY_MODE=public and DEPLOY_ORIGIN=https://<that-public-url> in the control worker vars, mirror both in scripts/e2e-scenarios.mjs, then rerun: node scripts/e2e-scenarios.mjs. The publish step then targets the public URL and the health check runs against the public app over the internet.
-3. After any of these flips, regenerate this report from actual output: node scripts/qa-run.mjs e2e && node scripts/qa-run.mjs report. Rows update only from recorded executions.
-- Responsive/accessibility results come from emulated Chromium viewports (360/390/412/1440), not physical devices.
-- qa-report.html rendered and screenshotted at 360px and 390px as the results-view evidence.
+Real generation and repair still need an authorized server Workers AI binding, `AI_REPAIR_ENABLED=true`, a sufficient project token budget, and an authenticated user. Merely copying an AI binding name into local Miniflare does not provide remote Workers AI access. No Cloudflare changes are authorized by this document.
+
+Public registration/login remain intentionally refused on non-localhost hosts. Production identity must be safely implemented and approved before testing the authenticated public pipeline. The prior live health-only deployment is not proof that the full application pipeline works. It is incorrect to say Workers Free cannot use workers.dev; that was not the blocker.
+
+Part 27 local release tests verify local HTTP deploy/health/rollback only. See `PART27-REAL-USER-TEST.md` and `part27-results.json` for actual execution results. Viewports are emulated Chromium, not physical-device verification.
 
 ## Reproduce
 
