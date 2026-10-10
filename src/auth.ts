@@ -54,16 +54,29 @@ export async function issueSession(env:Env,userId:string,oldHash:string|null=nul
 
 /** Local reference identity only. Exact old/new password, transactional session termination. */
 export async function changePassword(req:Request,env:Env,who:Identity):Promise<Response>{
- if(new URL(env.APP_ORIGIN).hostname!=='localhost'||new URL(req.url).hostname!=='localhost')throw new ApiError(503,'production_identity_not_configured');
+ const {identityOrigin,verifierHash,setKdf,userKdf,KDF_VERSION}=await import('./client-auth');
+ const origin=identityOrigin(env,req);if(!origin)throw new ApiError(503,'production_identity_not_configured');
  await rateLimit(req,env,'password-change',5);const b=await readBody(req);
- if(Object.keys(b).sort().join(',')!=='currentPassword,newPassword')throw new ApiError(400,'password_change_fields_denied');
- const current=validatePassword(b.currentPassword),next=validateNewPassword(b.newPassword);
- const u=await env.DB.prepare('SELECT password_hash,password_salt FROM users WHERE id=?').bind(who.userId).first<{password_hash:string;password_salt:string}>();
- if(!u||!constantEqual(await passwordHash(current,u.password_salt),u.password_hash))throw new ApiError(401,'invalid_credentials');
- if(constantEqual(current,next))throw new ApiError(400,'new_password_must_differ');
- const salt=randomToken(),hash=await passwordHash(next,salt);
+ const clientKdf='currentVerifier' in b;
+ if(!clientKdf&&origin!=='local')throw new ApiError(503,'production_identity_not_configured');
+ let salt:string,hash:string,u:{password_hash:string;password_salt:string}|null;
+ if(clientKdf){
+  if(Object.keys(b).sort().join(',')!=='currentVerifier,newSalt,newVerifier')throw new ApiError(400,'password_change_fields_denied');
+  for(const k of ['currentVerifier','newSalt','newVerifier'])if(typeof b[k]!=='string'||!/^[0-9a-f]{64}$/.test(b[k] as string))throw new ApiError(400,'invalid_verifier');
+  u=await env.DB.prepare('SELECT password_hash,password_salt FROM users WHERE id=?').bind(who.userId).first();
+  if(!u||await userKdf(env,who.userId)!==KDF_VERSION||!constantEqual(await verifierHash(u.password_salt,b.currentVerifier as string),u.password_hash))throw new ApiError(401,'invalid_credentials');
+  if(b.currentVerifier===b.newVerifier)throw new ApiError(400,'new_password_must_differ');
+  salt=b.newSalt as string;hash=await verifierHash(salt,b.newVerifier as string);
+ }else{
+  if(Object.keys(b).sort().join(',')!=='currentPassword,newPassword')throw new ApiError(400,'password_change_fields_denied');
+  const current=validatePassword(b.currentPassword),next=validateNewPassword(b.newPassword);
+  u=await env.DB.prepare('SELECT password_hash,password_salt FROM users WHERE id=?').bind(who.userId).first();
+  if(!u||!constantEqual(await passwordHash(current,u.password_salt),u.password_hash))throw new ApiError(401,'invalid_credentials');
+  if(constantEqual(current,next))throw new ApiError(400,'new_password_must_differ');
+  salt=randomToken();hash=await passwordHash(next,salt);
+ }
  // Optimistic old-hash guard makes concurrent password changes fail atomically.
- await env.DB.batch([env.DB.prepare('UPDATE users SET password_hash=?,password_salt=? WHERE id=? AND password_hash=?').bind(hash,salt,who.userId,u.password_hash),env.DB.prepare('INSERT INTO password_change_guard(user_id,expected_hash) VALUES(?,?)').bind(who.userId,hash),env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(who.userId),env.DB.prepare('DELETE FROM password_change_guard WHERE user_id=?').bind(who.userId)]);
+ await env.DB.batch([env.DB.prepare('UPDATE users SET password_hash=?,password_salt=? WHERE id=? AND password_hash=?').bind(hash,salt,who.userId,u.password_hash),setKdf(env,who.userId,clientKdf),env.DB.prepare('INSERT INTO password_change_guard(user_id,expected_hash) VALUES(?,?)').bind(who.userId,hash),env.DB.prepare('DELETE FROM sessions WHERE user_id=?').bind(who.userId),env.DB.prepare('DELETE FROM password_change_guard WHERE user_id=?').bind(who.userId)]);
  const headers=new Headers();for(const name of ['__Host-velnavoq_session','__Host-velnavoq_csrf'])headers.append('set-cookie',name+'=; Secure; SameSite=Strict; Path=/; Max-Age=0'+(name.endsWith('session')?'; HttpOnly':''));
  return Response.json({changed:true,reauthenticationRequired:true},{headers});
 }
