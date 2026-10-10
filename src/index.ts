@@ -16,7 +16,7 @@ import {tenancy} from './tenancy';
 import {quotaApi,enforceRoute,QuotaError,sweep} from './quota';import {ApiError,type Env,type Proposal} from './contracts';
 import {authenticate,identity,issueSession,project,rateLimit,role,IDLE_SECONDS} from './auth';
 import {mfaApi,verifyMfaChallenge} from './mfa';
-import {accountRecoveryApi} from './account-recovery';
+import {accountRecoveryApi} from './account-recovery';import {clientAuthenticate,kdfParams} from './client-auth';
 import {canonical,digest,readBody,validateBundle,validateName} from './security';
 async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
  const url=new URL(req.url),path=url.pathname,method=req.method;
@@ -27,10 +27,10 @@ async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>
  else await rateLimit(req,env,'incoming-writes',120);
  if(path==='/oauth/callback'){const callback=await oauthClient(req,env);if(callback)return callback;}const oauth=await oauthPublic(req,env);if(oauth)return oauth;const mcp=await mcpEndpoint(req,env);if(mcp)return mcp;
  if(path==='/api/health'&&method==='GET')return Response.json({service:'velnavoq-control',status:'ok',runtime:'disabled',supportedStack:'static-web-v1'});
- if(path==='/api/auth/register'&&method==='POST')return authenticate(req,env,true);
- if(path==='/api/auth/login'&&method==='POST')return authenticate(req,env,false);
+ if(path==='/api/auth/kdf'&&method==='POST')return kdfParams(req,env);
+ if((path==='/api/auth/register'||path==='/api/auth/login')&&method==='POST'){const peek=await readBody(req.clone());if('verifier' in peek)return clientAuthenticate(req,env,path.endsWith('register'));return authenticate(req,env,path.endsWith('register'))}
  if(path==='/api/auth/mfa/verify'&&method==='POST'){const verified=await verifyMfaChallenge(req,env);return issueSession(env,verified.userId);}
- const accountRecovery=await accountRecoveryApi(req,env);if(accountRecovery)return accountRecovery;
+ const accountRecovery=await accountRecoveryApi(req,env,ctx);if(accountRecovery)return accountRecovery;
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
  const mfa=await mfaApi(req,env,who);if(mfa)return mfa;const scope=/^\/api\/projects\/([^/]+)/.exec(path);if(scope){await project(env,who.userId,scope[1]!);env.OBS_PROJECT_ID=scope[1]!;}const observed=await observabilityApi(req,env,who);if(observed)return observed;
  if(method!=='GET')await rateLimit(req,env,'writes',60);{const qr=await quotaApi(req,env,who);if(qr)return qr;if(Math.random()<0.02)ctx.waitUntil(sweep(env).catch(()=>{}));await enforceRoute(env,who,method,path,/\/proposals$/.test(path)&&method==='POST'?(await req.clone().text()).length:0);}
