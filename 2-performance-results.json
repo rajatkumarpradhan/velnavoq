@@ -1,0 +1,864 @@
+{
+  "baseline": {
+    "phase": "baseline",
+    "environment": {
+      "node": "v22.23.3",
+      "cpuThrottle": 4,
+      "network": {
+        "latencyMs": 150,
+        "downloadBytesPerSecond": 200000,
+        "uploadBytesPerSecond": 90000
+      },
+      "scope": "Local production UI + real workerd/D1; no production, physical device or provider latency claim",
+      "browser": "156.0.8078.4",
+      "project": {
+        "files": 50,
+        "bytes": 453252
+      }
+    },
+    "metrics": {
+      "contextApi": {
+        "n": 25,
+        "medianMs": 43.94,
+        "p95Ms": 74.15,
+        "minMs": 37.63,
+        "maxMs": 83.14
+      },
+      "d1SnapshotQuery": {
+        "n": 25,
+        "medianMs": 17.61,
+        "p95Ms": 23.79,
+        "minMs": 15.75,
+        "maxMs": 24.19
+      },
+      "concurrentUsers": {
+        "users": 8,
+        "requests": 24,
+        "elapsedMs": 192.65,
+        "n": 24,
+        "medianMs": 140.72,
+        "p95Ms": 190.64,
+        "minMs": 50.69,
+        "maxMs": 190.68
+      },
+      "coldLoad": {
+        "n": 5,
+        "medianMs": 77.41,
+        "p95Ms": 199.37,
+        "minMs": 70.95,
+        "maxMs": 199.37
+      },
+      "coldResources": [
+        {
+          "name": "/assets/index-B3EV8Vq5.js",
+          "transferSize": 78724,
+          "decodedBodySize": 259028
+        },
+        {
+          "name": "/assets/index-BCPfkEEC.css",
+          "transferSize": 5271,
+          "decodedBodySize": 19433
+        }
+      ],
+      "slowNetworkEditorColdMs": 6420.56,
+      "editorNavigation4x": {
+        "n": 10,
+        "medianMs": 148.09,
+        "p95Ms": 233.2,
+        "minMs": 126.31,
+        "maxMs": 233.2
+      },
+      "largeEditorInteraction4x": {
+        "n": 30,
+        "medianMs": 55.1,
+        "p95Ms": 201.15,
+        "minMs": 35.95,
+        "maxMs": 374.11
+      },
+      "memoryBytes": {
+        "Documents": 1,
+        "Nodes": 6581,
+        "JSHeapUsedSize": 11150632,
+        "JSHeapTotalSize": 14766080
+      },
+      "editorScrollFrame4x": {
+        "n": 59,
+        "medianMs": 16.7,
+        "p95Ms": 16.8,
+        "minMs": 16.6,
+        "maxMs": 33.3,
+        "framesOver50ms": 0
+      },
+      "staticBuild50FilesMs": 822.94,
+      "workerReportedBuildMs": 49,
+      "previewStartup50FilesMs": 234.09,
+      "concurrentJobs": {
+        "requests": 8,
+        "elapsedMs": 380.42,
+        "statuses": [
+          201,
+          409,
+          409,
+          409,
+          409,
+          409,
+          409,
+          409
+        ]
+      },
+      "idleApiRequests2500ms": 0,
+      "assets": [
+        {
+          "file": "index-B3EV8Vq5.js",
+          "bytes": 259028,
+          "gzipBytes": 78424
+        },
+        {
+          "file": "project-editor-Cx3wkU7g.js",
+          "bytes": 359537,
+          "gzipBytes": 115124
+        }
+      ],
+      "aiLatency": {
+        "status": "not_verified",
+        "reason": "No live provider binding in local harness; agent run is gated. No synthetic model latency reported."
+      },
+      "databasePlan": [
+        {
+          "id": 4,
+          "parent": 0,
+          "notused": 62,
+          "detail": "SEARCH file_versions USING INDEX file_versions_snapshot (project_id=? AND version=?)"
+        }
+      ]
+    },
+    "checks": [
+      "POST /auth/register 200",
+      "POST /workspaces 201",
+      "POST /workspaces/8a5a9c00-669c-49e4-9987-8caedd114d28/projects 201",
+      "near-limit project fits 500KB contract",
+      "POST /projects/1f47a153-c438-44c1-a6c8-a5037d8d38e4/proposals 201",
+      "POST /proposals/bc439959-dd41-4a49-be9d-7441958e6e3c/approve 200",
+      "context 0",
+      "context 1",
+      "context 2",
+      "context 3",
+      "context 4",
+      "context 5",
+      "context 6",
+      "context 7",
+      "context 8",
+      "context 9",
+      "context 10",
+      "context 11",
+      "context 12",
+      "context 13",
+      "context 14",
+      "context 15",
+      "context 16",
+      "context 17",
+      "context 18",
+      "context 19",
+      "context 20",
+      "context 21",
+      "context 22",
+      "context 23",
+      "context 24",
+      "concurrent user register 0",
+      "concurrent user register 1",
+      "concurrent user register 2",
+      "concurrent user register 3",
+      "concurrent user register 4",
+      "concurrent user register 5",
+      "concurrent user register 6",
+      "concurrent user register 7",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "near-limit editor tracks dirty buffer",
+      "preview cleans up",
+      "only one concurrent build admitted per user",
+      "POST /projects/1f47a153-c438-44c1-a6c8-a5037d8d38e4/build/2c8d402e-7646-4f81-998e-6e4623604b3a/cancel 200",
+      "idle preview route performs no polling",
+      "no overflow 360",
+      "a11y 360 ",
+      "no overflow 390",
+      "a11y 390 ",
+      "no overflow 412",
+      "a11y 412 ",
+      "no overflow 1440",
+      "a11y 1440 "
+    ]
+  },
+  "optimized": {
+    "phase": "optimized",
+    "environment": {
+      "node": "v22.23.3",
+      "cpuThrottle": 4,
+      "network": {
+        "latencyMs": 150,
+        "downloadBytesPerSecond": 200000,
+        "uploadBytesPerSecond": 90000
+      },
+      "scope": "Local production UI + real workerd/D1; no production, physical device or provider latency claim",
+      "browser": "156.0.8078.4",
+      "project": {
+        "files": 50,
+        "bytes": 453252
+      }
+    },
+    "metrics": {
+      "contextApi": {
+        "n": 25,
+        "medianMs": 45.57,
+        "p95Ms": 96,
+        "minMs": 37.69,
+        "maxMs": 110.5
+      },
+      "contextResponseBytes": {
+        "full": 946547,
+        "editor": 475371
+      },
+      "d1SnapshotQuery": {
+        "n": 25,
+        "medianMs": 18.09,
+        "p95Ms": 28.15,
+        "minMs": 15.55,
+        "maxMs": 39.23
+      },
+      "concurrentUsers": {
+        "users": 8,
+        "requests": 24,
+        "elapsedMs": 206.81,
+        "n": 24,
+        "medianMs": 202.4,
+        "p95Ms": 205.19,
+        "minMs": 195.19,
+        "maxMs": 205.26
+      },
+      "coldLoad": {
+        "n": 5,
+        "medianMs": 78.75,
+        "p95Ms": 209.78,
+        "minMs": 76.26,
+        "maxMs": 209.78
+      },
+      "coldResources": [
+        {
+          "name": "/assets/index-CS51OpKx.js",
+          "transferSize": 78723,
+          "decodedBodySize": 259028
+        },
+        {
+          "name": "/assets/index-BCPfkEEC.css",
+          "transferSize": 5271,
+          "decodedBodySize": 19433
+        }
+      ],
+      "slowNetworkEditorColdMs": 3889.39,
+      "editorNavigation4x": {
+        "n": 10,
+        "medianMs": 126.56,
+        "p95Ms": 144.35,
+        "minMs": 110.48,
+        "maxMs": 144.35
+      },
+      "largeEditorInteraction4x": {
+        "n": 30,
+        "medianMs": 59.77,
+        "p95Ms": 193.76,
+        "minMs": 42.8,
+        "maxMs": 359.29
+      },
+      "memoryBytes": {
+        "Documents": 1,
+        "Nodes": 6588,
+        "JSHeapUsedSize": 11487408,
+        "JSHeapTotalSize": 14503936
+      },
+      "editorScrollFrame4x": {
+        "n": 59,
+        "medianMs": 16.7,
+        "p95Ms": 16.7,
+        "minMs": 16.6,
+        "maxMs": 16.8,
+        "framesOver50ms": 0
+      },
+      "staticBuild50FilesMs": 818.52,
+      "workerReportedBuildMs": 49,
+      "previewStartup50FilesMs": 217.03,
+      "concurrentJobs": {
+        "requests": 8,
+        "elapsedMs": 359.83,
+        "statuses": [
+          201,
+          409,
+          409,
+          409,
+          409,
+          409,
+          409,
+          409
+        ]
+      },
+      "idleApiRequests2500ms": 0,
+      "assets": [
+        {
+          "file": "index-CS51OpKx.js",
+          "bytes": 259028,
+          "gzipBytes": 78423
+        },
+        {
+          "file": "project-editor-DlVJNchs.js",
+          "bytes": 359880,
+          "gzipBytes": 115292
+        }
+      ],
+      "aiLatency": {
+        "status": "not_verified",
+        "reason": "No live provider binding in local harness; agent run is gated. No synthetic model latency reported."
+      },
+      "databasePlan": [
+        {
+          "id": 4,
+          "parent": 0,
+          "notused": 62,
+          "detail": "SEARCH file_versions USING INDEX file_versions_snapshot (project_id=? AND version=?)"
+        }
+      ]
+    },
+    "checks": [
+      "POST /auth/register 200",
+      "POST /workspaces 201",
+      "POST /workspaces/ee0dbeae-7618-4a05-88d5-7728edd91c40/projects 201",
+      "near-limit project fits 500KB contract",
+      "POST /projects/f0276f19-b165-4ba0-b3ff-460858f46dfd/proposals 201",
+      "POST /proposals/c0ba1d46-0765-42be-90b6-2ed49126ffef/approve 200",
+      "context 0",
+      "context 1",
+      "context 2",
+      "context 3",
+      "context 4",
+      "context 5",
+      "context 6",
+      "context 7",
+      "context 8",
+      "context 9",
+      "context 10",
+      "context 11",
+      "context 12",
+      "context 13",
+      "context 14",
+      "context 15",
+      "context 16",
+      "context 17",
+      "context 18",
+      "context 19",
+      "context 20",
+      "context 21",
+      "context 22",
+      "context 23",
+      "context 24",
+      "concurrent user register 0",
+      "concurrent user register 1",
+      "concurrent user register 2",
+      "concurrent user register 3",
+      "concurrent user register 4",
+      "concurrent user register 5",
+      "concurrent user register 6",
+      "concurrent user register 7",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "near-limit editor tracks dirty buffer",
+      "preview cleans up",
+      "only one concurrent build admitted per user",
+      "POST /projects/f0276f19-b165-4ba0-b3ff-460858f46dfd/build/7f51094a-40ae-4e72-a489-e9037ce78a45/cancel 200",
+      "idle preview route performs no polling",
+      "no overflow 360",
+      "a11y 360 ",
+      "no overflow 390",
+      "a11y 390 ",
+      "no overflow 412",
+      "a11y 412 ",
+      "no overflow 1440",
+      "a11y 1440 "
+    ]
+  },
+  "repeat": {
+    "phase": "optimized-repeat",
+    "environment": {
+      "node": "v22.23.3",
+      "cpuThrottle": 4,
+      "network": {
+        "latencyMs": 150,
+        "downloadBytesPerSecond": 200000,
+        "uploadBytesPerSecond": 90000
+      },
+      "scope": "Local production UI + real workerd/D1; no production, physical device or provider latency claim",
+      "browser": "156.0.8078.4",
+      "project": {
+        "files": 50,
+        "bytes": 453252
+      }
+    },
+    "metrics": {
+      "contextApi": {
+        "n": 25,
+        "medianMs": 41.03,
+        "p95Ms": 52.68,
+        "minMs": 38.01,
+        "maxMs": 75.29
+      },
+      "contextResponseBytes": {
+        "full": 946547,
+        "editor": 475371
+      },
+      "d1SnapshotQuery": {
+        "n": 25,
+        "medianMs": 16.95,
+        "p95Ms": 21.08,
+        "minMs": 15.29,
+        "maxMs": 24.37
+      },
+      "concurrentUsers": {
+        "users": 8,
+        "requests": 24,
+        "elapsedMs": 194.43,
+        "n": 24,
+        "medianMs": 188.76,
+        "p95Ms": 192.47,
+        "minMs": 51.95,
+        "maxMs": 192.49
+      },
+      "coldLoad": {
+        "n": 5,
+        "medianMs": 73.72,
+        "p95Ms": 200.82,
+        "minMs": 70.79,
+        "maxMs": 200.82
+      },
+      "coldResources": [
+        {
+          "name": "/assets/index-CS51OpKx.js",
+          "transferSize": 78723,
+          "decodedBodySize": 259028
+        },
+        {
+          "name": "/assets/index-BCPfkEEC.css",
+          "transferSize": 5271,
+          "decodedBodySize": 19433
+        }
+      ],
+      "slowNetworkEditorColdMs": 3905.09,
+      "editorNavigation4x": {
+        "n": 10,
+        "medianMs": 123.11,
+        "p95Ms": 175.43,
+        "minMs": 112.35,
+        "maxMs": 175.43
+      },
+      "largeEditorInteraction4x": {
+        "n": 30,
+        "medianMs": 56.72,
+        "p95Ms": 141.61,
+        "minMs": 42.86,
+        "maxMs": 146.97
+      },
+      "memoryBytes": {
+        "Documents": 1,
+        "Nodes": 6585,
+        "JSHeapUsedSize": 11674908,
+        "JSHeapTotalSize": 15028224
+      },
+      "editorScrollFrame4x": {
+        "n": 59,
+        "medianMs": 16.7,
+        "p95Ms": 16.8,
+        "minMs": 16.5,
+        "maxMs": 33.3,
+        "framesOver50ms": 0
+      },
+      "staticBuild50FilesMs": 1167.74,
+      "workerReportedBuildMs": 42,
+      "previewStartup50FilesMs": 256.07,
+      "concurrentJobs": {
+        "requests": 8,
+        "elapsedMs": 313.01,
+        "statuses": [
+          201,
+          409,
+          409,
+          409,
+          409,
+          409,
+          409,
+          409
+        ]
+      },
+      "idleApiRequests2500ms": 0,
+      "assets": [
+        {
+          "file": "index-CS51OpKx.js",
+          "bytes": 259028,
+          "gzipBytes": 78423
+        },
+        {
+          "file": "project-editor-DlVJNchs.js",
+          "bytes": 359880,
+          "gzipBytes": 115292
+        }
+      ],
+      "aiLatency": {
+        "status": "not_verified",
+        "reason": "No live provider binding in local harness; agent run is gated. No synthetic model latency reported."
+      },
+      "databasePlan": [
+        {
+          "id": 4,
+          "parent": 0,
+          "notused": 62,
+          "detail": "SEARCH file_versions USING INDEX file_versions_snapshot (project_id=? AND version=?)"
+        }
+      ]
+    },
+    "checks": [
+      "POST /auth/register 200",
+      "POST /workspaces 201",
+      "POST /workspaces/c3002761-cb56-443f-a309-5c5d7bac7fd2/projects 201",
+      "near-limit project fits 500KB contract",
+      "POST /projects/6a01d817-2e8d-4211-b894-2053749ae3f0/proposals 201",
+      "POST /proposals/b323b8a0-65b8-4c2f-a25a-689cdbc36c48/approve 200",
+      "context 0",
+      "context 1",
+      "context 2",
+      "context 3",
+      "context 4",
+      "context 5",
+      "context 6",
+      "context 7",
+      "context 8",
+      "context 9",
+      "context 10",
+      "context 11",
+      "context 12",
+      "context 13",
+      "context 14",
+      "context 15",
+      "context 16",
+      "context 17",
+      "context 18",
+      "context 19",
+      "context 20",
+      "context 21",
+      "context 22",
+      "context 23",
+      "context 24",
+      "concurrent user register 0",
+      "concurrent user register 1",
+      "concurrent user register 2",
+      "concurrent user register 3",
+      "concurrent user register 4",
+      "concurrent user register 5",
+      "concurrent user register 6",
+      "concurrent user register 7",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "near-limit editor tracks dirty buffer",
+      "preview cleans up",
+      "only one concurrent build admitted per user",
+      "POST /projects/6a01d817-2e8d-4211-b894-2053749ae3f0/build/74c74c27-ce1c-47c2-b69b-c88ab1996380/cancel 200",
+      "idle preview route performs no polling",
+      "no overflow 360",
+      "a11y 360 ",
+      "no overflow 390",
+      "a11y 390 ",
+      "no overflow 412",
+      "a11y 412 ",
+      "no overflow 1440",
+      "a11y 1440 "
+    ]
+  },
+  "finalIntegrated": {
+    "phase": "final",
+    "environment": {
+      "node": "v22.23.3",
+      "cpuThrottle": 4,
+      "network": {
+        "latencyMs": 150,
+        "downloadBytesPerSecond": 200000,
+        "uploadBytesPerSecond": 90000
+      },
+      "scope": "Local production UI + real workerd/D1; no production, physical device or provider latency claim",
+      "browser": "156.0.8078.4",
+      "project": {
+        "files": 50,
+        "bytes": 453252
+      }
+    },
+    "metrics": {
+      "contextApi": {
+        "n": 25,
+        "medianMs": 41.66,
+        "p95Ms": 52.22,
+        "minMs": 35.09,
+        "maxMs": 84.96
+      },
+      "contextResponseBytes": {
+        "full": 946547,
+        "editor": 475371
+      },
+      "d1SnapshotQuery": {
+        "n": 25,
+        "medianMs": 18.62,
+        "p95Ms": 22.68,
+        "minMs": 15.76,
+        "maxMs": 24.89
+      },
+      "concurrentUsers": {
+        "users": 8,
+        "requests": 24,
+        "elapsedMs": 237.6,
+        "n": 24,
+        "medianMs": 235.29,
+        "p95Ms": 236.03,
+        "minMs": 76.32,
+        "maxMs": 237.13
+      },
+      "coldLoad": {
+        "n": 5,
+        "medianMs": 81.76,
+        "p95Ms": 213.28,
+        "minMs": 76.69,
+        "maxMs": 213.28
+      },
+      "coldResources": [
+        {
+          "name": "/assets/index-Bueoj5xo.js",
+          "transferSize": 78916,
+          "decodedBodySize": 260140
+        },
+        {
+          "name": "/assets/index-BCPfkEEC.css",
+          "transferSize": 5271,
+          "decodedBodySize": 19433
+        }
+      ],
+      "slowNetworkEditorColdMs": 3913.13,
+      "editorNavigation4x": {
+        "n": 10,
+        "medianMs": 137.55,
+        "p95Ms": 227.31,
+        "minMs": 118.28,
+        "maxMs": 227.31
+      },
+      "largeEditorInteraction4x": {
+        "n": 30,
+        "medianMs": 57.83,
+        "p95Ms": 105.61,
+        "minMs": 38.75,
+        "maxMs": 154.13
+      },
+      "memoryBytes": {
+        "Documents": 1,
+        "Nodes": 6588,
+        "JSHeapUsedSize": 10983604,
+        "JSHeapTotalSize": 13979648
+      },
+      "editorScrollFrame4x": {
+        "n": 59,
+        "medianMs": 16.7,
+        "p95Ms": 16.8,
+        "minMs": 16.5,
+        "maxMs": 33.4,
+        "framesOver50ms": 0
+      },
+      "staticBuild50FilesMs": 817.52,
+      "workerReportedBuildMs": 45,
+      "previewStartup50FilesMs": 194.8,
+      "concurrentJobs": {
+        "requests": 8,
+        "elapsedMs": 321.11,
+        "statuses": [
+          201,
+          409,
+          409,
+          409,
+          409,
+          409,
+          409,
+          409
+        ]
+      },
+      "idleApiRequests2500ms": 0,
+      "assets": [
+        {
+          "file": "index-Bueoj5xo.js",
+          "bytes": 260140,
+          "gzipBytes": 78616
+        },
+        {
+          "file": "project-editor-Ce8hYjjV.js",
+          "bytes": 359880,
+          "gzipBytes": 115288
+        }
+      ],
+      "aiLatency": {
+        "status": "not_verified",
+        "reason": "No live provider binding in local harness; agent run is gated. No synthetic model latency reported."
+      },
+      "databasePlan": [
+        {
+          "id": 4,
+          "parent": 0,
+          "notused": 62,
+          "detail": "SEARCH file_versions USING INDEX file_versions_snapshot (project_id=? AND version=?)"
+        }
+      ]
+    },
+    "checks": [
+      "POST /auth/register 200",
+      "POST /workspaces 201",
+      "POST /workspaces/3aed8efd-bbb6-41ef-83d3-8292ee2b65af/projects 201",
+      "near-limit project fits 500KB contract",
+      "POST /projects/7b53023c-1eef-482a-8fbf-c3a55054c094/proposals 201",
+      "POST /proposals/2509ec75-c8c1-4e9b-95b5-79105f5c4350/approve 200",
+      "context 0",
+      "context 1",
+      "context 2",
+      "context 3",
+      "context 4",
+      "context 5",
+      "context 6",
+      "context 7",
+      "context 8",
+      "context 9",
+      "context 10",
+      "context 11",
+      "context 12",
+      "context 13",
+      "context 14",
+      "context 15",
+      "context 16",
+      "context 17",
+      "context 18",
+      "context 19",
+      "context 20",
+      "context 21",
+      "context 22",
+      "context 23",
+      "context 24",
+      "editor projection rejects anonymous access",
+      "concurrent user register 0",
+      "concurrent user register 1",
+      "concurrent user register 2",
+      "concurrent user register 3",
+      "concurrent user register 4",
+      "concurrent user register 5",
+      "concurrent user register 6",
+      "concurrent user register 7",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "concurrent authenticated read",
+      "editor projection rejects another user",
+      "near-limit editor tracks dirty buffer",
+      "preview cleans up",
+      "only one concurrent build admitted per user",
+      "POST /projects/7b53023c-1eef-482a-8fbf-c3a55054c094/build/34b67159-5f41-4f94-abd3-f084f8a3a3ed/cancel 200",
+      "idle preview route performs no polling",
+      "no overflow 360",
+      "a11y 360 ",
+      "no overflow 390",
+      "a11y 390 ",
+      "no overflow 412",
+      "a11y 412 ",
+      "no overflow 1440",
+      "a11y 1440 "
+    ]
+  }
+}
