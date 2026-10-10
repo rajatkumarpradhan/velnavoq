@@ -13,7 +13,7 @@ import {codingAgentApi,verifyAgentApproval} from './coding-agent-api';
 import {aiApi} from './ai-api';
 import {persistence} from './persistence';
 import {tenancy} from './tenancy';
-import {ApiError,type Env,type Proposal} from './contracts';
+import {quotaApi,enforceRoute,QuotaError,sweep} from './quota';import {ApiError,type Env,type Proposal} from './contracts';
 import {authenticate,identity,project,rateLimit,role} from './auth';
 import {canonical,digest,readBody,validateBundle,validateName} from './security';
 async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
@@ -28,7 +28,7 @@ async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>
  if(path==='/api/auth/register'&&method==='POST')return authenticate(req,env,true);
  if(path==='/api/auth/login'&&method==='POST')return authenticate(req,env,false);
  const who=await identity(req,env,!['GET','HEAD'].includes(method));const scope=/^\/api\/projects\/([^/]+)/.exec(path);if(scope){await project(env,who.userId,scope[1]!);env.OBS_PROJECT_ID=scope[1]!;}const observed=await observabilityApi(req,env,who);if(observed)return observed;
- if(method!=='GET')await rateLimit(req,env,'writes',60);
+ if(method!=='GET')await rateLimit(req,env,'writes',60);{const qr=await quotaApi(req,env,who);if(qr)return qr;if(Math.random()<0.02)ctx.waitUntil(sweep(env).catch(()=>{}));await enforceRoute(env,who,method,path,/\/proposals$/.test(path)&&method==='POST'?(await req.clone().text()).length:0);}
  if(!['GET','HEAD'].includes(method)&&!path.includes('/environment')&&req.headers.get('content-type')?.startsWith('application/json')){let target=/^\/api\/projects\/([^/]+)/.exec(path)?.[1];const proposalId=/^\/api\/proposals\/([^/]+)/.exec(path)?.[1];if(proposalId)target=(await env.DB.prepare('SELECT project_id FROM proposals WHERE id=?').bind(proposalId).first<{project_id:string}>())?.project_id;if(target){await project(env,who.userId,target);await rejectEnvironmentLeak(env,target,canonical(await readBody(req.clone())))}}const shipping=await deploymentApi(req,env,who,ctx);if(shipping)return shipping;const versioning=await versioningApi(req,env,who);if(versioning)return versioning;const environment=await environmentApi(req,env,who);if(environment)return environment;const clientFlow=await oauthClient(req,env,who);if(clientFlow)return clientFlow;const human=await humanApproval(req,env,who);if(human)return human;const mcpManagement=await mcpManage(req,env,who);if(mcpManagement)return mcpManagement;
  const repairResponse=await repairApi(req,env,who);if(repairResponse)return repairResponse;
  const previewResponse=await previewApi(req,env,who);if(previewResponse)return previewResponse;
@@ -68,6 +68,6 @@ async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>
 }
 export default {async fetch(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
  const requestId=crypto.randomUUID(),started=Date.now();env={...env,OBS_REQUEST_ID:requestId};let res:Response;
- try{res=await route(req,env,ctx);}catch(e){if(e instanceof ApiError)res=Response.json({error:e.code,requestId},{status:e.status});else{res=Response.json({error:'internal_error',requestId},{status:500});}}
+ try{res=await route(req,env,ctx);}catch(e){if(e instanceof QuotaError){const h=new Headers();if(e.detail.retryAfterSeconds)h.set('retry-after',String(e.detail.retryAfterSeconds));res=Response.json({error:e.code,...e.detail,requestId},{status:e.status,headers:h});}else if(e instanceof ApiError)res=Response.json({error:e.code,requestId},{status:e.status});else{res=Response.json({error:'internal_error',requestId},{status:500});}}
  const stored=await observeRequest(env,req,res,started);const h=new Headers(res.headers);if(!stored)h.set('x-observability-status','unavailable');h.set('cache-control','no-store');h.set('x-content-type-options','nosniff');h.set('permissions-policy','camera=(), microphone=(), geolocation=(), payment=()');h.set('referrer-policy','no-referrer');if(new URL(req.url).protocol==='https:')h.set('strict-transport-security','max-age=31536000; includeSubDomains');h.set('x-request-id',requestId);h.set('content-security-policy',"default-src 'none'; frame-ancestors 'none'");return new Response(res.body,{status:res.status,headers:h});
 }};
