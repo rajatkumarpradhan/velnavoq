@@ -1,3 +1,4 @@
+const ProjectObservability=lazy(()=>import('./components/project-observability').then(m=>({default:m.ProjectObservability})));
 const ProjectDeployment=lazy(()=>import('./components/project-deployment').then(m=>({default:m.ProjectDeployment})));
 import React,{Suspense,lazy,useEffect,useState} from 'react';import {createRoot} from 'react-dom/client';import {Button,Badge,Panel,Empty,Modal,Field,Notice} from './components/system';import {routes,mainRoutes} from './routes';import './theme.css';import {useNavigation,api,HttpError} from './navigation';import {WorkspaceCreate,ProjectCreate,DeleteProject,Members,Sessions} from './components/identity';import {Shell} from './components/shell';import {ScratchEditor,DiffViewer,ServiceScreen} from './components/workbench';
 const ProjectEditor=lazy(()=>import('./components/project-editor').then(m=>({default:m.ProjectEditor})));
@@ -23,6 +24,7 @@ else if(route==='environment')content=<Suspense fallback={<Notice>Loading masked
 else if(route==='mcp')content=<Suspense fallback={<Notice>Loading MCP permissions...</Notice>}><ProjectMcp key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='repair')content=<Suspense fallback={<Notice>Loading repair context...</Notice>}><ProjectRepair key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='preview')content=<Suspense fallback={<Notice>Loading preview...</Notice>}><ProjectPreview key={nav.selectedProject?.id} nav={nav}/></Suspense>;
+else if(route==='observability')content=<Suspense fallback={<Notice>Loading actual events...</Notice>}><ProjectObservability key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='logs')content=<Suspense fallback={<Notice>Loading static builder...</Notice>}><ProjectBuild key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='terminal')content=<Suspense fallback={<Notice>Loading local runtime...</Notice>}><ProjectTerminal key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='create')content=<><h1>Create project</h1><ProjectCreate nav={nav}/></>;
