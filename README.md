@@ -1,9 +1,11 @@
 # Velnavoq
 by Drayvenn Lab
 
-Fresh P0 control-plane implementation. Not a launched AI app builder.
+Connector rebuild in progress on the existing Parts 1-39 source. Not a verified live launch.
 
-## Actual code
+Current status, tested scope and deployment requirements: [REBUILD-R1.md](REBUILD-R1.md). Apper comparison: [APPER-RESEARCH.md](APPER-RESEARCH.md). The original P0 notes below are historical, not current feature claims.
+
+## Original P0 code notes (historical)
 - Workers TypeScript API, pinned dependencies and D1 migrations.
 - Email/password authentication, salted PBKDF2-SHA256 (600,000 iterations), opaque hashed server sessions, exact-origin and CSRF checks, expiry/logout.
 - Workspace/project create/list/read with owner/editor/viewer authorization.
@@ -18,7 +20,7 @@ Node 22.23.3. `npm ci && npm run typecheck && npm run build && npm test`.
 Password authentication is restricted to localhost and returns 503 on public origins. Production identity is blocked until a provider and Free-plan suitability are verified. Registration is disabled by default. To evaluate locally, set `REGISTRATION_ENABLED=true` in `.dev.vars`; never silently enable public signup.
 The D1 ID in configuration is explicitly a local-only zero ID, not a claimed live resource. No deploy script is provided. `build` is a dry run only.
 
-## NOT IMPLEMENTED / BLOCKED
+## Original P0 gaps (historical; see R1 for current scope)
 - Isolated untrusted build/runtime, npm installs, arbitrary servers, deployed preview: BLOCKED by unverified free runtime. API returns 503; it never executes source.
 - AI models, MCP/OAuth, editor/terminal, hosting, release rollback, production secret store, team invitations, email verification/recovery, project deletion and production backups: NOT IMPLEMENTED.
 - No runtime or provider secrets are accepted or supplied to app bundles.

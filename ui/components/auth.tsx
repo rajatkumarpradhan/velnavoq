@@ -6,7 +6,7 @@ type View='signin'|'signup'|'recovery'|'reset';
 export function AuthScreen({go,refresh}:{go:(r:string,w?:string,p?:string)=>void;refresh:()=>void}){
  const [view,setView]=useState<View>('signin'),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[show,setShow]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[info,setInfo]=useState(''),[mfaToken,setMfaToken]=useState(''),[mfaCode,setMfaCode]=useState(''),[token,setToken]=useState('');
  useEffect(()=>{const m=/^#signin\?reset=([0-9a-f]{64})$/.exec(location.hash);if(m){setToken(m[1]!);setView('reset');history.replaceState(null,'',location.pathname+'#signin')}},[]);
- useEffect(()=>{if(sessionStorage.getItem('velnavoq_idle')){sessionStorage.removeItem('velnavoq_idle');setInfo('You were signed out after 30 minutes of inactivity.')}},[]);
+ useEffect(()=>{sessionStorage.removeItem('velnavoq_idle')},[]);
  const done=()=>{const resume=oauthResume(location.hash,location.origin);if(resume){location.assign(resume);return}setPassword('');setMfaToken('');setMfaCode('');refresh();go('dashboard','','')};
  const run=async(fn:()=>Promise<void>)=>{setBusy(true);setError('');setInfo('');try{await fn()}catch(e){setError(friendly(e instanceof Error&&e.message==='kdf_downgrade_refused'?'kdf_downgrade_refused':'connection_unavailable'))}finally{setBusy(false)}};
  const fail=(r:{status:number;body:any})=>{setError(friendly(r.body?.error||'request_failed'));};

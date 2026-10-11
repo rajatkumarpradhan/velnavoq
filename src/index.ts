@@ -1,3 +1,4 @@
+import {platformReadiness} from './platform-readiness';
 import {approvalInbox} from './approval-inbox';
 import {publicMcpPath,publicCors} from './public-mcp-http';
 import {accountPublic,accountManage,accountEndpoint} from './account-mcp';
@@ -51,6 +52,7 @@ async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>
  const tenantResponse=await tenancy(req,env,who);if(tenantResponse)return tenantResponse;
  if(path==='/api/auth/renew'&&method==='POST')return renewSession(req,env,who);
  if(path==='/api/auth/logout'&&method==='POST'){await env.DB.prepare('DELETE FROM sessions WHERE token_hash=?').bind(who.sessionHash).run();const headers=new Headers();headers.append('set-cookie','__Host-velnavoq_session=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0');headers.append('set-cookie','__Host-velnavoq_csrf=; Secure; SameSite=Lax; Path=/; Max-Age=0');return Response.json({ok:true},{headers});}
+ if(path==='/api/platform-readiness'&&method==='GET')return Response.json(platformReadiness(env),{headers:{'cache-control':'no-store'}});
  if(path==='/api/me'&&method==='GET'){const u=await env.DB.prepare('SELECT email FROM users WHERE id=?').bind(who.userId).first<{email:string}>();const s=await env.DB.prepare('SELECT expires_at FROM sessions WHERE token_hash=?').bind(who.sessionHash).first<{expires_at:number}>();return Response.json({userId:who.userId,email:u?.email,expiresAt:s?.expires_at,idleTimeoutSeconds:IDLE_SECONDS});}
  const activity=/^\/api\/workspaces\/([^/]+)\/activity$/.exec(path);
  if(activity&&method==='GET'){await role(env,who.userId,activity[1]!);return Response.json((await env.DB.prepare('SELECT a.id,a.project_id,p.name as project_name,a.action,a.digest,a.created_at FROM audit_events a LEFT JOIN projects p ON p.id=a.project_id WHERE a.workspace_id=? ORDER BY a.id DESC LIMIT 100').bind(activity[1]).all()).results);}
