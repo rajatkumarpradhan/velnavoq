@@ -14,7 +14,7 @@ export function platformReadiness(env:Env) {
   evidence:'configuration-only',mcp:{endpoint:origin?origin+'/mcp':null,transport:'streamable-http',authentication:'oauth2-pkce',externalClientsVerified:false},
   sessions:{persistent:true,lifetimeDays:SESSION_SECONDS/86400,idleSignout:false,revocable:true},
   publishing:{configured:publishing,target:publishing?target:null,healthVerified:false},
-  backend:{kind:'fixed-typed-d1',operations:['public-read','public-create','owner-admin'],privateAppUsers:false,arbitraryServerCode:false,sensitiveDataSupported:false},
+  backend:{kind:'fixed-typed-d1',operations:['public-read','public-create','owner-admin-public-only','private-owner-crud'],privateAppUsers:true,privateAuth:{trustedShell:true,emailVerification:false,passwordRecovery:false},arbitraryServerCode:false,sensitiveDataSupported:false},
   repair:{configured:!!env.AI&&env.AI_REPAIR_ENABLED==='true',paidFallback:false},
   preview:{serverSupported:true,browserHostVerified:false},blockers,
  };
