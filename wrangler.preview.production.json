@@ -1,0 +1,11 @@
+{
+  "name": "velnavoq-isolated-preview",
+  "account_id": "bf803aa9551ec9003f00a3d27062a502",
+  "compatibility_date": "2026-10-08",
+  "keep_vars": true,
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./preview-host"
+  }
+}
