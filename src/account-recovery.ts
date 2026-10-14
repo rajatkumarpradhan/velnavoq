@@ -18,12 +18,13 @@ export async function accountRecoveryApi(req:Request,env:Env,ctx?:ExecutionConte
   const b=await readBody(req);
   if(Object.keys(b).sort().join(',')!=='email')throw new ApiError(400,'recovery_request_fields_denied');
   const email=validateEmail(b.email),now=Math.floor(Date.now()/1000);
+  // Charge the same hashed-email budget before lookup, including unknown addresses.
+  // Otherwise a fourth request reveals account existence through 429 versus 200.
+  const accountKey=await digest('recovery:'+email),ws=Math.floor(Date.now()/3600000)*3600000;
+  const admitted=await env.DB.prepare("INSERT INTO usage_counters(scope,scope_id,metric,window_start,count) VALUES('account',?,?,?,1) ON CONFLICT(scope,scope_id,metric,window_start) DO UPDATE SET count=count+1 WHERE count<3 RETURNING count").bind(accountKey,'recovery.request.hour',ws).first<{count:number}>();
+  if(!admitted)throw new ApiError(429,'rate_limited');
   const u=await env.DB.prepare('SELECT id FROM users WHERE email=?').bind(email).first<{id:string}>();
   if(u){
-   const accountKey=await digest('recovery:'+email),ws=Math.floor(Date.now()/3600000)*3600000;
-   const used=(await env.DB.prepare("SELECT count FROM usage_counters WHERE scope='account' AND scope_id=? AND metric='recovery.request.hour' AND window_start=?").bind(accountKey,ws).first<{count:number}>())?.count||0;
-   if(used>=3)throw new ApiError(429,'rate_limited');
-   await env.DB.prepare("INSERT INTO usage_counters(scope,scope_id,metric,window_start,count) VALUES('account',?,?,?,1) ON CONFLICT(scope,scope_id,metric,window_start) DO UPDATE SET count=count+1").bind(accountKey,'recovery.request.hour',ws).run();
    const token=randomToken();
    await env.DB.batch([env.DB.prepare('DELETE FROM recovery_requests WHERE user_id=?').bind(u.id),env.DB.prepare('INSERT INTO recovery_requests(token_hash,user_id,expires_at,created_at) VALUES(?,?,?,?)').bind(await digest(token),u.id,now+TOKEN_TTL,now),...(originKind==='local'?[env.DB.prepare('INSERT INTO recovery_outbox(user_id,email,token,created_at) VALUES(?,?,?,?)').bind(u.id,email,token,Date.now())]:[])]);
    if(originKind==='public'){const job=sendRecoveryMail(env,email,env.APP_ORIGIN+'/#signin?reset='+token,TOKEN_TTL/60).catch(()=>'failed');if(ctx)ctx.waitUntil(job);else await job;}

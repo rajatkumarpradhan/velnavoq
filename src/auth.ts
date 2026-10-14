@@ -1,3 +1,4 @@
+import {chargeSignup} from './service-admission';
 import {assertSignInAllowed,recordSignInFailure,clearSignInFailures} from './quota';import {ApiError,type Env,type Identity,type Project,type Role} from './contracts';
 import {checkOrigin,constantEqual,digest,passwordHash,randomToken,readBody,validateEmail,validatePassword,validateNewPassword,sessionToken} from './security';
 export const SESSION_SECONDS=365*86400;const lifetime=SESSION_SECONDS,idle=0,idleRefresh=60;
@@ -36,7 +37,7 @@ export async function authenticate(req:Request,env:Env,register:boolean):Promise
  await rateLimit(req,env,'auth');
  if(register&&env.REGISTRATION_ENABLED!=='true')throw new ApiError(403,'registration_closed');
  const b=await readBody(req),email=validateEmail(b.email),password=register?validateNewPassword(b.password):validatePassword(b.password);let userId:string;
- if(register){userId=crypto.randomUUID();const salt=randomToken(),hash=await passwordHash(password,salt);try{await env.DB.prepare('INSERT INTO users(id,email,password_hash,password_salt,created_at) VALUES(?,?,?,?,?)').bind(userId,email,hash,salt,Date.now()).run();}catch{throw new ApiError(409,'account_not_created');}}
+ if(register){const total=await chargeSignup(env);userId=crypto.randomUUID();const salt=randomToken(),hash=await passwordHash(password,salt);try{const saved=await env.DB.prepare('INSERT INTO users(id,email,password_hash,password_salt,created_at) SELECT ?,?,?,?,? WHERE (SELECT count(*) FROM users)<?').bind(userId,email,hash,salt,Date.now(),total).run();if(!saved.meta.changes)throw Error();}catch{throw new ApiError(409,'account_not_created');}}
  else{const accountKey=await digest('login:'+email);await assertSignInAllowed(env,accountKey);const u=await env.DB.prepare('SELECT id,password_hash,password_salt FROM users WHERE email=?').bind(email).first<{id:string;password_hash:string;password_salt:string}>();
  const hash=await passwordHash(password,u?.password_salt||'authentication-timing-padding');if(!u||!constantEqual(hash,u.password_hash)){await recordSignInFailure(env,accountKey);throw new ApiError(401,'invalid_credentials');}await clearSignInFailures(env,accountKey);userId=u.id;}
  // Part 28: a correct password on an MFA-enabled account yields a second-factor challenge, not a session.

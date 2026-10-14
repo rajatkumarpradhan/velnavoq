@@ -1,3 +1,4 @@
+import {chargeSignup} from './service-admission';
 // Part 29: public sign-up / sign-in. The browser stretches the password (PBKDF2-SHA256, 600k) and sends only
 // the 256-bit verifier; the server stores SHA-256(salt:verifier). No password KDF runs in the Worker, which
 // is what makes this fit the Workers Free 10 ms CPU limit. Offline guessing costs the attacker the same
@@ -10,9 +11,9 @@ export const KDF_ITERATIONS=600000,KDF_VERSION='client-v1';
 const HEX64=/^[0-9a-f]{64}$/;
 /** True when the request targets the configured public origin (https) or the local reference origin. */
 export function identityOrigin(env:Env,req:Request):'local'|'public'|null{
- let app:URL;try{app=new URL(env.APP_ORIGIN)}catch{return null}const host=new URL(req.url).hostname;
+ let app:URL;try{app=new URL(env.APP_ORIGIN)}catch{return null}const requestOrigin=new URL(req.url),host=requestOrigin.hostname;
  if(app.hostname==='localhost'&&host==='localhost')return 'local';
- if(app.protocol==='https:'&&host===app.hostname&&!app.port)return 'public';return null;
+ if(app.protocol==='https:'&&requestOrigin.origin===app.origin&&!app.port)return 'public';return null;
 }
 export function assertIdentityOrigin(env:Env,req:Request):'local'|'public'{const o=identityOrigin(env,req);if(!o)throw new ApiError(503,'production_identity_not_configured');return o}
 export const verifierHash=(salt:string,verifier:string)=>digest('velnavoq-verifier-v1:'+salt+':'+verifier);
@@ -39,8 +40,8 @@ export async function clientAuthenticate(req:Request,env:Env,register:boolean):P
  if(register){
   if(!allowed(env,email))throw new ApiError(403,'registration_closed');
   if(typeof b.salt!=='string'||!HEX64.test(b.salt))throw new ApiError(400,'invalid_salt');
-  userId=crypto.randomUUID();
-  try{await env.DB.batch([env.DB.prepare('INSERT INTO users(id,email,password_hash,password_salt,created_at) VALUES(?,?,?,?,?)').bind(userId,email,await verifierHash(b.salt,b.verifier),b.salt,Date.now()),env.DB.prepare('INSERT INTO user_kdf(user_id,kdf) VALUES(?,?)').bind(userId,KDF_VERSION)]);}catch{throw new ApiError(409,'account_not_created')}
+  const total=await chargeSignup(env);userId=crypto.randomUUID();
+  try{const saved=await env.DB.batch([env.DB.prepare('INSERT INTO users(id,email,password_hash,password_salt,created_at) SELECT ?,?,?,?,? WHERE (SELECT count(*) FROM users)<?').bind(userId,email,await verifierHash(b.salt,b.verifier),b.salt,Date.now(),total),env.DB.prepare('INSERT INTO user_kdf(user_id,kdf) SELECT ?,? WHERE EXISTS(SELECT 1 FROM users WHERE id=?)').bind(userId,KDF_VERSION,userId)]);if(!saved[0]!.meta.changes)throw Error();}catch{throw new ApiError(409,'account_not_created')}
  }else{
   const key=await digest('login:'+email);await assertSignInAllowed(env,key);
   const u=await env.DB.prepare("SELECT u.id,u.password_hash,u.password_salt,COALESCE(k.kdf,'server-pbkdf2-v1') kdf FROM users u LEFT JOIN user_kdf k ON k.user_id=u.id WHERE u.email=?").bind(email).first<{id:string;password_hash:string;password_salt:string;kdf:string}>();

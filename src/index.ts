@@ -1,3 +1,4 @@
+import {platformEmailApi} from './platform-email-api';
 import {platformReadiness} from './platform-readiness';
 import {approvalInbox} from './approval-inbox';
 import {publicMcpPath,publicCors} from './public-mcp-http';
@@ -18,7 +19,7 @@ import {codingAgentApi,verifyAgentApproval} from './coding-agent-api';
 import {aiApi} from './ai-api';
 import {persistence} from './persistence';
 import {tenancy} from './tenancy';
-import {quotaApi,enforceRoute,QuotaError,sweep} from './quota';import {ApiError,type Env,type Proposal} from './contracts';
+import {quotaApi,enforceRoute,QuotaError,sweep,LIMITS,checkGauge} from './quota';import {ApiError,type Env,type Proposal} from './contracts';
 import {authenticate,identity,issueSession,renewSession,project,rateLimit,role,IDLE_SECONDS} from './auth';
 import {mfaApi,verifyMfaChallenge} from './mfa';
 import {accountRecoveryApi} from './account-recovery';import {clientAuthenticate,kdfParams} from './client-auth';
@@ -36,6 +37,7 @@ async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>
  if(path==='/api/auth/kdf'&&method==='POST')return kdfParams(req,env);
  if((path==='/api/auth/register'||path==='/api/auth/login')&&method==='POST'){const peek=await readBody(req.clone());if('verifier' in peek)return clientAuthenticate(req,env,path.endsWith('register'));return authenticate(req,env,path.endsWith('register'))}
  if(path==='/api/auth/mfa/verify'&&method==='POST'){const verified=await verifyMfaChallenge(req,env);return issueSession(env,verified.userId);}
+ const emailIdentity=await platformEmailApi(req,env);if(emailIdentity)return emailIdentity;
  const accountRecovery=await accountRecoveryApi(req,env,ctx);if(accountRecovery)return accountRecovery;
  const who=await identity(req,env,!['GET','HEAD'].includes(method));
  const inbox=await approvalInbox(req,env,who);if(inbox)return inbox;const accountManagement=await accountManage(req,env,who);if(accountManagement)return accountManagement;const mfa=await mfaApi(req,env,who);if(mfa)return mfa;const scope=/^\/api\/projects\/([^/]+)/.exec(path);if(scope){await project(env,who.userId,scope[1]!);env.OBS_PROJECT_ID=scope[1]!;}const observed=await observabilityApi(req,env,who);if(observed)return observed;
@@ -58,12 +60,15 @@ async function route(req:Request,env:Env,ctx:ExecutionContext):Promise<Response>
  if(activity&&method==='GET'){await role(env,who.userId,activity[1]!);return Response.json((await env.DB.prepare('SELECT a.id,a.project_id,p.name as project_name,a.action,a.digest,a.created_at FROM audit_events a LEFT JOIN projects p ON p.id=a.project_id WHERE a.workspace_id=? ORDER BY a.id DESC LIMIT 100').bind(activity[1]).all()).results);}
  if(path==='/api/workspaces'&&method==='POST'){
  const body=await readBody(req),id=crypto.randomUUID(),name=validateName(body.name);
- await env.DB.batch([env.DB.prepare('INSERT INTO workspaces(id,name,created_at) VALUES(?,?,?)').bind(id,name,Date.now()),env.DB.prepare('INSERT INTO memberships(workspace_id,user_id,role) VALUES(?,?,?)').bind(id,who.userId,'owner')]);return Response.json({id,name},{status:201});}
+ // The quota preflight is advisory; admission must also be inside the serialized D1 batch.
+ const saved=await env.DB.batch([env.DB.prepare("INSERT INTO workspaces(id,name,created_at) SELECT ?,?,? WHERE (SELECT count(*) FROM memberships WHERE user_id=? AND role='owner')<?").bind(id,name,Date.now(),who.userId,LIMITS['workspaces.total'].limit),env.DB.prepare("INSERT INTO memberships(workspace_id,user_id,role) SELECT ?,?,'owner' WHERE EXISTS(SELECT 1 FROM workspaces WHERE id=?)").bind(id,who.userId,id)]);
+ if(!saved[0]!.meta.changes){await checkGauge(env,'workspaces.total',who.userId,1);throw new ApiError(409,'workspace_admission_changed');}return Response.json({id,name},{status:201});}
  if(path==='/api/workspaces'&&method==='GET')return Response.json((await env.DB.prepare('SELECT w.id,w.name,m.role FROM workspaces w JOIN memberships m ON w.id=m.workspace_id WHERE m.user_id=?').bind(who.userId).all()).results);
  const ws=/^\/api\/workspaces\/([^/]+)\/projects$/.exec(path);
  if(ws){const workspaceId=ws[1]!;await role(env,who.userId,workspaceId,method==='GET'?['owner','editor','viewer']:['owner','editor']);
  if(method==='GET')return Response.json((await env.DB.prepare('SELECT id,name,revision,release_digest FROM projects WHERE workspace_id=?').bind(workspaceId).all()).results);
- if(method==='POST'){const b=await readBody(req),name=validateName(b.name),id=crypto.randomUUID();await env.DB.batch([env.DB.prepare('INSERT INTO projects(id,workspace_id,name,created_at,created_by) VALUES(?,?,?,?,?)').bind(id,workspaceId,name,Date.now(),who.userId),env.DB.prepare('INSERT INTO ai_budgets(project_id,token_limit) VALUES(?,?)').bind(id,40000)]);return Response.json({id,name,revision:0},{status:201});}}
+ if(method==='POST'){const b=await readBody(req),name=validateName(b.name),id=crypto.randomUUID();const saved=await env.DB.batch([env.DB.prepare('INSERT INTO projects(id,workspace_id,name,created_at,created_by) SELECT ?,?,?,?,? WHERE (SELECT count(*) FROM projects WHERE workspace_id=?)<?').bind(id,workspaceId,name,Date.now(),who.userId,workspaceId,LIMITS['projects.total'].limit),env.DB.prepare('INSERT INTO ai_budgets(project_id,token_limit) SELECT ?,? WHERE EXISTS(SELECT 1 FROM projects WHERE id=?)').bind(id,40000,id)]);
+ if(!saved[0]!.meta.changes){await checkGauge(env,'projects.total',workspaceId,1);throw new ApiError(409,'project_admission_changed');}return Response.json({id,name,revision:0},{status:201});}}
  const pr=/^\/api\/projects\/([^/]+)(?:\/(proposals|audit|runtime))?$/.exec(path);
  if(pr){const p=await project(env,who.userId,pr[1]!,method==='POST'?['owner','editor']:['owner','editor','viewer']);
  if(!pr[2]&&method==='GET')return Response.json(p);

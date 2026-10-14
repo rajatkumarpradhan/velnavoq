@@ -1,4 +1,5 @@
 import {ApiError,type Env,type Identity} from './contracts';
+import {role} from './auth';
 /**
  * Part 24: abuse, quota and cost control. One registry (LIMITS) is the single source of truth for every
  * number; the API, the usage panel, the user messages and docs/ABUSE-CONTROL.md all read from it.
@@ -165,7 +166,7 @@ export async function enforceRoute(env:Env,who:Identity,method:string,path:strin
  await consume(env,'requests.minute',who.userId,1,who.userId,now);
  if(method==='POST'&&path==='/api/workspaces'){await assertNoCooldown(env,who.userId,now);await checkGauge(env,'workspaces.total',who.userId,1,now);return}
  const ws=/^\/api\/workspaces\/([^/]+)\/projects$/.exec(path);
- if(method==='POST'&&ws){await assertNoCooldown(env,who.userId,now);await checkGauge(env,'projects.total',ws[1]!,1,now);return}
+ if(method==='POST'&&ws){await role(env,who.userId,ws[1]!,['owner','editor']);await assertNoCooldown(env,who.userId,now);await checkGauge(env,'projects.total',ws[1]!,1,now);return}
  const hit=matchRule(method,path);if(!hit)return;
  await assertNoCooldown(env,who.userId,now);
  const {rule,projectId}=hit;
