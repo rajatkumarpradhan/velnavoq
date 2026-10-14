@@ -13,7 +13,7 @@ const ProjectAgent=lazy(()=>import('./components/project-agent').then(m=>({defau
 const ProjectUsage=lazy(()=>import('./components/project-usage').then(m=>({default:m.ProjectUsage})));
 const ProjectObservability=lazy(()=>import('./components/project-observability').then(m=>({default:m.ProjectObservability})));
 const ProjectDeployment=lazy(()=>import('./components/project-deployment').then(m=>({default:m.ProjectDeployment})));
-import React,{Suspense,lazy,useEffect,useState} from 'react';import {createRoot} from 'react-dom/client';import {Button,Badge,Panel,Empty,Modal,Field,Notice} from './components/system';import {routes,mainRoutes} from './routes';import './theme.css';import './premium.css';import './studio.css';import {useNavigation,api,HttpError} from './navigation';import {Shell} from './components/shell';
+import React,{Suspense,lazy,useEffect,useState} from 'react';import {createRoot} from 'react-dom/client';import {Button,Badge,Panel,Empty,Modal,Field,Notice} from './components/system';import {routes,mainRoutes} from './routes';import './theme.css';import './premium.css';import './studio.css';import './liquid-glass.css';import {useNavigation,api,HttpError} from './navigation';import {Shell} from './components/shell';
 const ProjectEditor=lazy(()=>import('./components/project-editor').then(m=>({default:m.ProjectEditor})));
 const ProjectTerminal=lazy(()=>import('./components/project-terminal').then(m=>({default:m.ProjectTerminal})));
 const ProjectBuild=lazy(()=>import('./components/project-build').then(m=>({default:m.ProjectBuild})));
@@ -30,7 +30,7 @@ useEffect(()=>{if(!nav.user)return;let active=true;const renew=()=>{if(document.
 useEffect(()=>{if(nav.state==='ready'&&!nav.loc.workspace&&nav.workspaces.length&&['dashboard','projects','create'].includes(route))go(route,nav.workspaces[0]!.id,'')},[nav.state,nav.workspaces.length,route,nav.loc.workspace]);
 let content:React.ReactNode;
 if(route==='home')content=<Home go={go}/>;
-else if(route==='signin')content=<AuthScreen go={go} refresh={nav.refresh}/>;
+else if(route==='signin')content=<AuthScreen go={go} refresh={nav.refresh} sessionState={nav.state} authenticated={!!nav.user}/>;
 else if(nav.state==='ready'&&!nav.workspaces.length&&['dashboard','projects','create'].includes(route))content=<><div className="page-title"><div><div className="eyebrow">WELCOME</div><h1>Name your workspace.</h1><p>A workspace holds your projects. You can add teammates later.</p></div></div><WorkspaceCreate nav={nav}/></>;
 else if(route==='dashboard'||route==='projects'||route==='workspaces'||route==='project')content=route==='project'&&nav.selectedProject?<ProjectOverview nav={nav}/>:<StudioDashboard nav={nav}/>;
 else if(['editor','files','review','approval'].includes(route))content=<Suspense fallback={<Panel title="Source editor"><Notice>Loading editor...</Notice></Panel>}><ProjectEditor nav={nav} reviewOnly={route==='review'||route==='approval'}/></Suspense>;
