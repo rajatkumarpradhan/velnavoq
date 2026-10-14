@@ -5,7 +5,7 @@ import {chromium} from 'playwright';
 import AxeBuilder from '@axe-core/playwright';
 const fixture='ui/public-records-fixture.html';
 writeFileSync(fixture,`<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Record management QA</title></head><body><main id="root"></main><script type="module">
-import React from 'react';import {createRoot} from 'react-dom/client';import {PublicRecordManager} from './components/public-record-manager';import './theme.css';import './premium.css';import './studio.css';import './liquid-glass.css';import './apple-refinement.css';import './interior-refinement.css';
+import React from 'react';import {createRoot} from 'react-dom/client';import {PublicRecordManager} from './components/public-record-manager';import './theme.css';import './premium.css';import './studio.css';import './liquid-glass.css';import './apple-refinement.css';import './interior-refinement.css';import './studio-workspace.css';
 createRoot(document.getElementById('root')).render(React.createElement(PublicRecordManager,{pid:'qa',owner:!location.search.includes('viewer'),tables:[{name:'tasks',fields:{title:'string',count:'number',done:'boolean'}}]}));</script></body></html>`);
 const server=spawn('./node_modules/.bin/vite',['--host','127.0.0.1','--port','5182','--strictPort'],{stdio:'ignore'});let browser,checks=0;const assert=(x,m)=>{if(!x)throw Error(m);checks++};
 try{for(let i=0;i<100;i++){try{await fetch('http://127.0.0.1:5182');break}catch{await new Promise(r=>setTimeout(r,100))}}browser=await chromium.launch({headless:true,args:['--no-sandbox']});const context=await browser.newContext({viewport:{width:390,height:844}});const page=await context.newPage();let rows=[],ops=[],invalid=false;

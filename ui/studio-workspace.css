@@ -1,0 +1,70 @@
+/* Distinct workbench interior. Public landing and account screens are deliberately untouched. */
+.app-layout{background:#f3f5f8;min-height:calc(100vh - 155px);grid-template-columns:224px minmax(0,1fr)}
+.app-layout .sidebar{background:linear-gradient(175deg,#172d43,#1d354a);border-right:1px solid #ffffff12;color:#d4e1ed;padding:30px 16px;backdrop-filter:none}
+.app-layout .sidebar .field>span{color:#b2c7da;letter-spacing:.13em;font-size:9px}
+.app-layout .sidebar select{background:#ffffff0d;color:#edf5fc;border-color:#a6c0d33b;box-shadow:none}
+.app-layout .sidebar select option{background:#21394d;color:#eef4fb}
+.app-layout .sidebar nav a{color:#c1d3e4;border-radius:10px}
+.app-layout .sidebar nav a:hover{color:#fff;background:#ffffff0d}
+.app-layout .sidebar nav a[aria-current=page]{color:#f5faff;background:#d7e7f21a;border-color:#c8dfea38;box-shadow:inset 3px 0 0 #b2d3d6}
+.app-layout .sidebar nav a[aria-disabled=true]{color:#bdcede;opacity:.64}
+.app-layout .sidebar .nav-label{color:#a7c0d4;font-size:9px}
+.app-layout .sidebar-bottom a,.app-layout .sidebar-bottom .button{color:#c5d8e9;background:transparent}
+.app-layout main{max-width:1600px;padding:30px 38px 64px;background:radial-gradient(ellipse at 90% 0%,#e2ebef90,transparent 45%)}
+.app-layout .breadcrumbs{margin-bottom:18px}
+.workspace-welcome{grid-template-columns:1fr 1fr;gap:30px;min-height:0;padding:8px 0 26px;margin-bottom:0;align-items:center;border-bottom:0}
+.workspace-welcome .page-title{gap:22px}
+.workspace-welcome h1{font-size:clamp(34px,3.6vw,54px);max-width:none;letter-spacing:-.055em;font-weight:550;line-height:1.1;margin:12px 0 0}
+.workspace-welcome .page-title p{font-size:13px;line-height:1.7;margin-top:10px;overflow-wrap:anywhere}
+.studio-welcome-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.workspace-welcome .eyebrow{letter-spacing:.16em;font-size:9px;margin:0}
+.workspace-motion .studio-film .glass-film-frame{aspect-ratio:16/9;max-height:248px;border-radius:20px;background:#14283e;border:1px solid #223e55;box-shadow:0 14px 30px #142b3f18;overflow:hidden}
+.workspace-motion .studio-film video{object-fit:cover;width:100%;height:100%}
+.studio-film .film-overlay{color:#d1e2ef;padding:18px}
+.studio-film .film-label{color:#d0e1f0;font-size:8px;letter-spacing:.18em}
+.studio-film .film-caption{color:#bfd2e3;max-width:48%;font-size:8px;line-height:1.6}
+.workspace-motion .studio-film .film-toggle{background:#f3f7fb!important;color:#2c455b!important;border:1px solid #ffffff80;min-height:36px;bottom:14px;right:14px;box-shadow:0 3px 10px #07152522}
+.studio-film .film-preference{color:#d9e8f4;background:#1b3147e8;font-size:9px;bottom:56px;border-radius:5px;padding:4px 6px}
+.app-layout .studio-stats{max-width:none;margin:0 0 28px;background:#ffffff8c;border:1px solid #dce5ed;border-radius:14px;padding:16px 22px;box-shadow:0 2px 8px #32476303}
+.app-layout .studio-stats>div{padding:0 18px 0 0;align-items:center;border-color:#d6e0e9}
+.app-layout .studio-stats>div+div{padding-left:26px}
+.app-layout .studio-stats strong{font-size:25px;line-height:1.1;margin-top:5px}
+.app-layout .studio-stats strong.role-value{font-size:19px;margin-top:7px}
+.app-layout .panel{border-radius:18px!important;background:#ffffffda!important;border:1px solid #dbe5ef!important;box-shadow:0 4px 20px #263c5706!important;backdrop-filter:none}
+.app-layout .panel-head{padding:20px 24px;border-color:#dbe5ef;background:#ffffff5c;border-radius:18px 18px 0 0}
+.app-layout .panel-head h2{font-size:14px;font-weight:600;color:#243e5b}
+.app-layout .project-library{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;padding:6px 24px 24px}
+.app-layout .project-tile{border-radius:14px!important;padding:20px!important;background:linear-gradient(120deg,#f7fafc,#edf3f7)!important;border-color:#dae5ed!important;box-shadow:none!important;text-align:left}
+.app-layout .project-tile h2{font-size:17px;line-height:1.35;min-height:0}
+.app-layout .project-tile-top{margin-bottom:18px}
+.app-layout .project-monogram{background:#deebf1;border-color:#bed3e0;border-radius:10px;color:#365b70}
+.app-layout .project-tile-bottom{margin-top:20px;padding-top:14px;border-color:#d1dee8}
+.app-layout .studio-grid{margin-top:22px;gap:20px;grid-template-columns:1fr 1fr}
+.app-layout .studio-grid>.panel{margin-top:0}
+.app-layout .compact-path>div{padding-bottom:14px;border-bottom:1px solid #e4ebf0;margin-bottom:14px}
+.app-layout .compact-path>div:last-child{border-bottom:0;padding-bottom:0;margin-bottom:0}
+.app-layout .path-number{background:#e8f0f4;color:#3b5c76;border-color:#d4e1e9}
+.app-layout .project-focus{border-radius:18px!important;background:linear-gradient(120deg,#e8f0f3,#eef2f8)!important;border-color:#d2e0ea!important;box-shadow:none!important}
+.app-layout .project-stages{gap:14px}
+.app-layout .project-stages>button{border-radius:14px!important;border-color:#dbe5ef!important;background:#ffffffcf!important;box-shadow:none!important}
+.app-layout .project-stages>button:hover{border-color:#a8c2d4!important;background:#f8fbfc!important}
+/* Long field names keep their full identity; horizontal scrolling belongs to this table, not the page. */
+.public-record-table-wrap{max-width:100%;overflow-x:auto;margin-top:22px;border:1px solid #d2deea;border-radius:12px;scrollbar-gutter:stable}
+.public-record-table-wrap:focus-visible{outline:2px solid #416b8f;outline-offset:4px}
+.public-record-table{width:100%;min-width:600px;table-layout:auto;border-collapse:collapse;background:#fff9;font-size:12px}
+.public-record-table th{white-space:nowrap;word-break:normal;overflow-wrap:normal;background:#edf3f7;color:#30485f;font-size:11px;text-align:left;border-bottom:1px solid #d8e4ec;padding:15px 18px;min-width:100px}
+.public-record-table td{padding:16px 18px;vertical-align:middle;white-space:nowrap;border-bottom:1px solid #e3eaf0;max-width:320px;overflow-wrap:normal;word-break:normal}
+.public-record-table td:first-child{font:11px ui-monospace,monospace;color:#596f83}
+.public-record-table td:nth-last-child(2){white-space:normal;min-width:160px;overflow-wrap:break-word}
+.public-record-table td:last-child{min-width:175px}
+.public-record-table td .button{display:inline-flex;margin-right:6px;min-height:36px;padding:8px 12px;font-size:11px}
+.public-record-table tr:last-child td{border-bottom:0}
+@media(prefers-reduced-motion:no-preference){.app-layout .panel,.app-layout .studio-stats{animation:studio-enter .4s ease-out both}.app-layout .studio-grid{animation:studio-enter .5s ease-out both}.workspace-welcome{animation:studio-enter .45s ease-out both}.app-layout .project-tile{transition:transform .18s,border-color .18s!important}.app-layout .project-tile:hover{transform:translateY(-2px)}@keyframes studio-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}}
+@media(max-width:1100px){.app-layout{grid-template-columns:205px minmax(0,1fr)}.app-layout main{padding:26px 26px 50px}.workspace-welcome{grid-template-columns:1fr .9fr;gap:22px}.workspace-welcome h1{font-size:42px}.studio-welcome-actions .button{font-size:11px}.workspace-motion .studio-film .glass-film-frame{aspect-ratio:1.5}.app-layout .studio-stats{padding:16px}.app-layout .studio-stats>div+div{padding-left:18px}}
+@media(max-width:850px){.workspace-welcome{grid-template-columns:1fr;gap:22px}.workspace-welcome .page-title{flex-direction:row;justify-content:space-between;align-items:center;gap:20px}.studio-welcome-actions{max-width:170px;gap:4px}.workspace-motion{max-width:none}.workspace-motion .studio-film .glass-film-frame{aspect-ratio:2.65;max-height:210px}.app-layout .studio-grid{grid-template-columns:1fr}.workspace-welcome h1{font-size:36px}}
+@media(max-width:700px){.app-layout{display:block}.app-layout main{padding:22px 18px 40px}.app-layout .sidebar.open{max-height:calc(100vh - 76px);overflow-y:auto;background:#1b3349}.workspace-welcome{padding:0 0 20px;gap:16px}.workspace-welcome .page-title{align-items:flex-start;gap:12px;flex-wrap:wrap}.workspace-welcome .page-title>div:first-child{flex:1;min-width:180px}.workspace-welcome h1{font-size:36px;margin-top:10px}.workspace-welcome .eyebrow{font-size:8px;margin-bottom:0}.workspace-welcome .page-title p{font-size:11px;margin-top:9px}.studio-welcome-actions{max-width:none;gap:4px;flex-direction:column;align-items:flex-start}.studio-welcome-actions .button.primary{padding:10px 12px;font-size:11px;min-height:40px}.studio-welcome-actions .button.quiet{padding:6px 4px;font-size:10px;min-height:32px}.workspace-motion .studio-film .glass-film-frame{aspect-ratio:1.9;border-radius:16px;max-height:220px}.studio-film .film-overlay{padding:14px}.studio-film .film-label{font-size:7px}.studio-film .film-caption{font-size:7px;max-width:48%}.studio-film .film-toggle{min-height:34px;font-size:9px;bottom:12px;right:12px}.app-layout .studio-stats{padding:14px 12px;margin-bottom:22px;border-radius:12px}.app-layout .studio-stats>div{padding-right:10px;gap:6px}.app-layout .studio-stats>div+div{padding-left:12px}.app-layout .studio-stats strong{font-size:22px}.app-layout .studio-stats strong.role-value{font-size:15px}.app-layout .studio-stats span{font-size:8px}.app-layout .studio-stats svg{width:14px}.app-layout .panel-head{padding:17px 18px}.app-layout .project-library{grid-template-columns:1fr;padding:2px 18px 18px}.app-layout .project-tile{padding:18px!important}.app-layout .project-tile-top{margin-bottom:13px}.app-layout .project-tile h2{font-size:18px}.app-layout .studio-grid{gap:16px;margin-top:18px}.public-record-table-wrap{margin-top:18px}.public-record-table{min-width:600px}}
+@media(max-width:370px){.workspace-welcome .page-title>div:first-child{min-width:160px}.workspace-welcome h1{font-size:32px}.studio-welcome-actions .button.primary{font-size:10px;padding:9px 10px}}
+@media(prefers-reduced-motion:reduce){.app-layout .panel,.app-layout .studio-stats,.workspace-welcome,.app-layout .studio-grid{animation:none!important}.app-layout .project-tile{transition:none!important;transform:none!important}}
+@media(forced-colors:active){.app-layout .sidebar{background:Canvas;color:CanvasText}.app-layout .sidebar nav a,.app-layout .sidebar .field>span,.app-layout .sidebar select{color:CanvasText}.public-record-table-wrap{border-color:CanvasText}.studio-film .film-caption,.studio-film .film-label{color:CanvasText;background:Canvas}}
+
+.workspace-motion .studio-film video{mix-blend-mode:normal}

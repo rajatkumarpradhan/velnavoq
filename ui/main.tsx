@@ -13,7 +13,7 @@ const ProjectAgent=lazy(()=>import('./components/project-agent').then(m=>({defau
 const ProjectUsage=lazy(()=>import('./components/project-usage').then(m=>({default:m.ProjectUsage})));
 const ProjectObservability=lazy(()=>import('./components/project-observability').then(m=>({default:m.ProjectObservability})));
 const ProjectDeployment=lazy(()=>import('./components/project-deployment').then(m=>({default:m.ProjectDeployment})));
-import React,{Suspense,lazy,useEffect,useState} from 'react';import {createRoot} from 'react-dom/client';import {Button,Badge,Panel,Empty,Modal,Field,Notice} from './components/system';import {routes,mainRoutes} from './routes';import './theme.css';import './premium.css';import './studio.css';import './liquid-glass.css';import './apple-refinement.css';import './interior-refinement.css';import {useNavigation,api,HttpError} from './navigation';import {Shell} from './components/shell';
+import React,{Suspense,lazy,useEffect,useState} from 'react';import {createRoot} from 'react-dom/client';import {Button,Badge,Panel,Empty,Modal,Field,Notice} from './components/system';import {routes,mainRoutes} from './routes';import './theme.css';import './premium.css';import './studio.css';import './liquid-glass.css';import './apple-refinement.css';import './interior-refinement.css';import './studio-workspace.css';import {useNavigation,api,HttpError} from './navigation';import {Shell} from './components/shell';
 const ProjectEditor=lazy(()=>import('./components/project-editor').then(m=>({default:m.ProjectEditor})));
 const ProjectTerminal=lazy(()=>import('./components/project-terminal').then(m=>({default:m.ProjectTerminal})));
 const ProjectBuild=lazy(()=>import('./components/project-build').then(m=>({default:m.ProjectBuild})));
