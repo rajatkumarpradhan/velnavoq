@@ -68,3 +68,19 @@
 @media(forced-colors:active){.app-layout .sidebar{background:Canvas;color:CanvasText}.app-layout .sidebar nav a,.app-layout .sidebar .field>span,.app-layout .sidebar select{color:CanvasText}.public-record-table-wrap{border-color:CanvasText}.studio-film .film-caption,.studio-film .film-label{color:CanvasText;background:Canvas}}
 
 .workspace-motion .studio-film video{mix-blend-mode:normal}
+/* Keep primary navigation visible rather than clipping it behind decorative controls. */
+.global {flex-wrap:wrap;gap:12px;}
+.header-actions {flex-wrap:wrap;min-width:0;}
+.build-instructions {padding-left:22px;line-height:1.65;}
+.build-instructions li {margin:10px 0;}
+.advanced-details {padding:16px 0;}
+.advanced-details>summary {cursor:pointer;font-weight:600;}
+@media(max-width:700px){
+ .global {padding:12px 16px;}
+ .global .brand {font-size:18px;}
+ .header-actions {gap:6px;justify-content:flex-end;}
+ .header-actions .header-history,.header-actions>button[aria-label="Open command palette"] {display:none;}
+ .header-actions .button {padding:10px 12px;min-height:44px;}
+ .header-projects {display:inline-flex;}
+ .sidebar.open {max-height:calc(100dvh - 110px);overflow-y:auto;}
+}
