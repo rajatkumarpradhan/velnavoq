@@ -1,4 +1,4 @@
-import {StudioDashboard,ProjectOverview} from './components/studio-dashboard';
+import {StudioDashboard,ProjectOverview,BuilderBar} from './components/studio-dashboard';
 import {preparePreviewWindow} from './preview-window';
 const Home=lazy(()=>import('./components/home').then(m=>({default:m.Home})));const AuthScreen=lazy(()=>import('./components/auth').then(m=>({default:m.AuthScreen})));const ServiceScreen=lazy(()=>import('./components/workbench').then(m=>({default:m.ServiceScreen})));
 const WorkspaceCreate=lazy(()=>import('./components/identity').then(m=>({default:m.WorkspaceCreate})));
@@ -13,7 +13,7 @@ const ProjectAgent=lazy(()=>import('./components/project-agent').then(m=>({defau
 const ProjectUsage=lazy(()=>import('./components/project-usage').then(m=>({default:m.ProjectUsage})));
 const ProjectObservability=lazy(()=>import('./components/project-observability').then(m=>({default:m.ProjectObservability})));
 const ProjectDeployment=lazy(()=>import('./components/project-deployment').then(m=>({default:m.ProjectDeployment})));
-import React,{Suspense,lazy,useEffect,useState} from 'react';import {createRoot} from 'react-dom/client';import {Button,Badge,Panel,Empty,Modal,Field,Notice} from './components/system';import {routes,mainRoutes} from './routes';import './theme.css';import './premium.css';import './studio.css';import './liquid-glass.css';import './apple-refinement.css';import './interior-refinement.css';import './studio-workspace.css';import {useNavigation,api,HttpError} from './navigation';import {Shell} from './components/shell';
+import React,{Suspense,lazy,useEffect,useState} from 'react';import {createRoot} from 'react-dom/client';import {Button,Badge,Panel,Empty,Modal,Field,Notice} from './components/system';import {routes,mainRoutes} from './routes';import './theme.css';import './premium.css';import './studio.css';import './liquid-glass.css';import './apple-refinement.css';import './interior-refinement.css';import './studio-workspace.css';import './reference-flow.css';import {useNavigation,api,HttpError} from './navigation';import {Shell} from './components/shell';
 const ProjectEditor=lazy(()=>import('./components/project-editor').then(m=>({default:m.ProjectEditor})));
 const ProjectTerminal=lazy(()=>import('./components/project-terminal').then(m=>({default:m.ProjectTerminal})));
 const ProjectBuild=lazy(()=>import('./components/project-build').then(m=>({default:m.ProjectBuild})));
@@ -56,5 +56,5 @@ else content=<><div className="page-title"><div><div className="eyebrow">WORKSPA
 const protectedRoutes=['backend','project','agent','editor','review','files','terminal','preview','logs','repair','approval','permissions','environment','deployment','releases','rollback'];
 if(protectedRoutes.includes(route)&&!nav.selectedProject)content=<><h1>{titleOf(route)}</h1><Panel><Empty title={nav.state==='anonymous'?'Sign in required':'Select a verified project'} detail="This navigation target needs an authenticated workspace and project returned by the backend."><Button onClick={()=>go(nav.state==='anonymous'?'signin':'projects')}>{nav.state==='anonymous'?'Sign in':'Choose a project'}</Button></Empty></Panel></>;
 if(!['home','signin',...routes.map(r=>r[0])].includes(route))content=<><h1>Page not found</h1><ServiceScreen id="404"/></>;
-return <Shell nav={nav}><Suspense fallback={<Notice>Loading this screen...</Notice>}>{content}</Suspense></Shell>}
+return <Shell nav={nav}>{nav.selectedProject&&protectedRoutes.includes(route)&&<BuilderBar nav={nav}/>}<Suspense fallback={<Notice>Loading this screen...</Notice>}>{content}</Suspense></Shell>}
 createRoot(document.getElementById('root')!).render(<React.StrictMode><ChunkBoundary><App/></ChunkBoundary></React.StrictMode>);
