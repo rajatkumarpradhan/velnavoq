@@ -1,0 +1,36 @@
+import {chromium} from 'playwright';
+import AxeBuilder from '@axe-core/playwright';
+import {spawn} from 'node:child_process';
+import {mkdirSync,writeFileSync} from 'node:fs';
+const output='../ui-delivery',origin='http://127.0.0.1:5212';mkdirSync(output,{recursive:true});
+const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','--host','127.0.0.1','--port','5212','--strictPort'],{stdio:'ignore'});let browser;const results=[];
+const check=(name,ok)=>{results.push({name,passed:!!ok});if(!ok)throw Error(name)};
+const anonymous=async c=>c.route(origin+'/api/**',r=>r.fulfill({status:401,contentType:'application/json',body:'{"error":"unauthorized"}'}));
+const fixture=async c=>c.route(origin+'/api/**',r=>{const path=new URL(r.request().url()).pathname;let data={};
+if(path==='/api/me')data={userId:'ui-qa',email:'ui-qa@example.test',expiresAt:Math.floor(Date.now()/1000)+86400};
+else if(path==='/api/workspaces')data=[{id:'qa-workspace',name:'Synthetic UI QA',role:'owner'}];
+else if(path.endsWith('/projects'))data=[{id:'qa-alpha',name:'Alpha — synthetic QA',revision:2,release_digest:null},{id:'qa-zeta',name:'Zeta — synthetic QA',revision:8,release_digest:'synthetic-digest'}];
+else if(path.endsWith('/activity'))data=[{id:1,project_id:'qa-alpha',project_name:'Alpha — synthetic QA',action:'source.apply',created_at:Date.now(),digest:'synthetic'}];
+else if(path==='/api/approval-inbox')data={items:[],limited:false};
+else if(path==='/api/auth/renew')data={expiresAt:Math.floor(Date.now()/1000)+86400};
+return r.fulfill({contentType:'application/json',body:JSON.stringify(data)});
+});
+try{
+for(let i=0;i<100;i++){try{if((await fetch(origin)).ok)break}catch{}await new Promise(r=>setTimeout(r,100))}
+browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+for(const width of [360,390,412,768,1440]){
+const c=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce'});await anonymous(c);const p=await c.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(origin+'/#home');await p.getByRole('heading',{name:'Your idea. Your code. Your next release.'}).waitFor();
+check('home no overflow '+width,await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));const a=await new AxeBuilder({page:p}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();check('home axe '+width,a.violations.length===0);
+await p.getByRole('button',{name:'Portfolio',exact:true}).click();check('starter idea fills actual composer '+width,(await p.locator('#home-idea').inputValue()).includes('responsive portfolio'));await p.getByRole('button',{name:'Start building'}).click();await p.waitForURL('**/#signin');check('idea retained for AI workspace '+width,await p.evaluate(()=>sessionStorage.getItem('velnavoq-build-idea')?.includes('responsive portfolio')));
+await p.goto(origin+'/#home');await p.locator('.studio-hero').waitFor();if([390,1440].includes(width))await p.screenshot({path:output+'/home-'+width+'.png',fullPage:true});check('home no JS errors '+width,errors.length===0);await c.close();
+const d=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce'});await fixture(d);const q=await d.newPage();const e=[];q.on('pageerror',x=>e.push(x.message));await q.goto(origin+'/#dashboard?workspace=qa-workspace');await q.locator('.project-tile').first().waitFor();check('project library shows backend loaded records '+width,await q.locator('.project-tile').count()===2);check('project name sort '+width,(await q.locator('.project-tile h2').first().innerText()).startsWith('Alpha'));
+await q.getByRole('combobox',{name:'Sort projects'}).selectOption('revision');check('revision sort '+width,(await q.locator('.project-tile h2').first().innerText()).startsWith('Zeta'));await q.getByRole('searchbox',{name:'Filter projects'}).fill('Alpha');check('project filter '+width,await q.locator('.project-tile').count()===1);await q.getByRole('searchbox',{name:'Filter projects'}).fill('no match');await q.getByRole('heading',{name:'No matching projects'}).waitFor();await q.getByRole('button',{name:'Clear filter'}).click();check('clear filter restores records '+width,await q.locator('.project-tile').count()===2);
+check('header does not overlap approval strip '+width,await q.evaluate(()=>document.querySelector('.global').getBoundingClientRect().bottom<=document.querySelector('.approval-strip').getBoundingClientRect().top));check('header controls stay inside header '+width,await q.evaluate(()=>document.querySelector('.header-actions').getBoundingClientRect().bottom<=document.querySelector('.global').getBoundingClientRect().bottom));check('dashboard no overflow '+width,await q.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));const b=await new AxeBuilder({page:q}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();if(b.violations.length)console.error(JSON.stringify(b.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)}))));check('dashboard axe '+width,b.violations.length===0);
+if([390,1440].includes(width))await q.screenshot({path:output+'/synthetic-dashboard-'+width+'.png',fullPage:true});
+await q.locator('.project-tile').filter({hasText:'Alpha — synthetic QA'}).click();await q.getByRole('heading',{name:'Alpha — synthetic QA',exact:true}).waitFor();await q.locator('.project-stages button').first().waitFor();check('project workflow navigation '+width,await q.locator('.project-stages button').count()===4);check('unpublished project not labeled live '+width,await q.getByText('No release is recorded for this project.',{exact:false}).count()===1);check('project no overflow '+width,await q.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));const a2=await new AxeBuilder({page:q}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();check('project axe '+width,a2.violations.length===0);
+if([390,1440].includes(width))await q.screenshot({path:output+'/synthetic-project-'+width+'.png',fullPage:true});await q.locator('.project-stages button').nth(1).click();await q.waitForURL('**/#review?**');check('review route retains project scope '+width,new URL(q.url()).hash.includes('project=qa-alpha'));
+await q.goto(origin+'/#dashboard?workspace=qa-workspace');await q.locator('.project-tile').first().waitFor();if(width<=700){await q.getByRole('button',{name:'Toggle navigation'}).click();check('mobile navigation opens '+width,await q.locator('.sidebar').isVisible());await q.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Projects',exact:true}).click();check('mobile navigation closes on selection '+width,!await q.locator('.sidebar').isVisible())}
+check('authenticated no JS errors '+width,e.length===0);await d.close();
+}
+console.log(JSON.stringify(results,null,2));
+}finally{writeFileSync(output+'/ui-browser-results.json',JSON.stringify(results,null,2));await browser?.close();server.kill('SIGTERM')}
