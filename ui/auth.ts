@@ -1,3 +1,4 @@
+import {requestJson} from './request';
 // Browser-side password stretching (Part 29). The server never sees the password, only this verifier.
 const enc=new TextEncoder();
 const hex=(b:ArrayBuffer)=>Array.from(new Uint8Array(b),n=>n.toString(16).padStart(2,'0')).join('');
@@ -13,10 +14,10 @@ export async function newPasswordProblem(p:string):Promise<string>{
  const {blockedPasswords}=await import('../src/password-blocklist');if(blockedPasswords.has(p))return 'That password is too common. Pick another.';return '';
 }
 export async function post(path:string,body:object):Promise<{status:number;body:any}>{
- const r=await fetch('/api'+path,{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
- return {status:r.status,body:await r.json().catch(()=>({}))};
+ const r=await requestJson('/api'+path,{method:'POST',credentials:'same-origin',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+ return {status:r.status,body:r.body};
 }
-const messages:Record<string,string>={invalid_credentials:'Email or password is not right.',registration_closed:'Sign-ups are not open right now. Please try again later.',account_not_created:'That email cannot be used. Try signing in instead.',rate_limited:'Too many tries. Wait a minute and try again.',invalid_email:'Enter a valid email address.',account_locked_temporarily:'Too many wrong passwords. Try again in 15 minutes.',invalid_mfa_code:'That code did not work. Try the next code or a recovery code.',invalid_or_expired_reset_token:'That reset link is invalid or has expired. Ask for a new one.',production_identity_not_configured:'Sign-in is not switched on for this address yet.',connection_unavailable:'Could not reach the server. Check your connection.',origin_denied:'This page is opened from a different address than the app expects.'};
+const messages:Record<string,string>={invalid_credentials:'Email or password is not right.',registration_closed:'Sign-ups are not open right now. Please try again later.',account_not_created:'That email cannot be used. Try signing in instead.',rate_limited:'Too many tries. Wait a minute and try again.',invalid_email:'Enter a valid email address.',account_locked_temporarily:'Too many wrong passwords. Try again in 15 minutes.',invalid_mfa_code:'That code did not work. Try the next code or a recovery code.',invalid_or_expired_reset_token:'That reset link is invalid or has expired. Ask for a new one.',production_identity_not_configured:'Sign-in is not switched on for this address yet.',request_timeout:'The request took too long. Check your saved session before trying again; the server may have received it.',connection_unavailable:'Could not reach the server. Check your connection.',origin_denied:'This page is opened from a different address than the app expects.'};
 export const friendly=(code:string)=>messages[code]||('Something went wrong ('+code+').');
 
 /** Verifier for the signed-in user's current password (used for sensitive changes). */
