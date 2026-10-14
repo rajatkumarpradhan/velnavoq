@@ -2,9 +2,30 @@ import {ApiError,type Env,type Identity} from './contracts';
 import {project,role} from './auth';
 import {canonical,digest,readBody,validateName} from './security';
 import {checkGauge} from './quota';
+import {mcpScopes} from './mcp';
 import {childStatements} from './account-mcp';
+export const scopeEffects:Record<string,string>={
+ 'project.read':'Read granted project metadata; no private app records.',
+ 'files.read':'Read granted source paths/files; secret-bearing files refused.',
+ 'patch.propose':'Propose exact source changes; owner must approve before applying.',
+ 'sandbox.write':'Apply source only with a separate active owner sandbox consent; never publishes.',
+ 'checks.run':'Run static source checks; never publishes or executes backend code.',
+ 'preview.create':'Prepare private static preview of saved source; no backend session.',
+ 'repair.run':'Repair static source with separate active sandbox consent; never publishes.',
+ 'release.publish':'Publish only with separate explicit owner public-release Autopilot consent.',
+ 'schema.propose':'Propose additive typed schema and permissions; separate exact owner review required.',
+ 'schema.read':'Read schema/proposals/permissions only; no stored app records.'
+};
+export function requestCapabilities(granted:string[]){const allowed=mcpScopes.filter(s=>granted.includes(s));return {
+ scopeCatalog:mcpScopes.map(scope=>({scope,effect:scopeEffects[scope],requestable:allowed.includes(scope)})),
+ requestableProjectScopes:allowed,
+ accountCreation:{scope:'projects.create',granted:granted.includes('projects.create'),effect:'Allows proposing creation; never include this account scope in requested project scopes. Owner approves exact workspace/name/scopes.'},
+ creationDefaults:{publication:'unpublished',visibility:'Workspace visibility follows existing membership permissions; connector access requires an exact approved project grant. No public application is deployed.',source:'empty',backend:'none',autopilot:false,notice:'Creation writes no release, source or backend schema. A separate reviewed publish is required for any public app. Private app-user data requires a separately approved version-2 owner-isolated schema; unpublished is not a private-row schema.'},
+ limitations:['No arbitrary server functions, payments or password recovery.','Static preview has no backend session.'],
+ requestProcedure:'List access targets, use exact returned workspaceId/projectId, request only requestableProjectScopes, wait for exact owner approval, poll request_status. Denied or expired requests must not be retried.'
+};}
 const tool=(name:string,description:string,properties:any={},required:string[]=[])=>({name:'velnavoq.'+name,description,inputSchema:{type:'object',properties,required,additionalProperties:false},annotations:{readOnlyHint:['list_access_targets','request_status'].includes(name),openWorldHint:false}});
-export function requestTools(scopes:string[]){return [tool('list_access_targets','Owned project names/IDs and workspaces only, no project content. Use IDs to request approval.'),tool('request_project_access','Ask owner to approve exact project/scopes. No access until approval. Never request again while pending.',{projectId:{type:'string'},scopes:{type:'array',items:{type:'string'}}},['projectId','scopes']),...(scopes.includes('projects.create')?[tool('request_create_project','Propose a project in an owned workspace. Owner approves exact name and project scopes before creation. Autopilot remains off.',{workspaceId:{type:'string'},name:{type:'string'},scopes:{type:'array',items:{type:'string'}}},['workspaceId','name','scopes'])]:[]),tool('request_status','Poll this connection request. Stop after denied or expired; approved returns projectId.',{requestId:{type:'string'}},['requestId'])];}
+export function requestTools(scopes:string[]){const projectScopes=mcpScopes.filter(s=>scopes.includes(s));const scopeSchema={type:'array',minItems:1,maxItems:projectScopes.length,uniqueItems:true,items:{type:'string',enum:projectScopes},description:'Choose only these exact granted project scopes. No default; request only effects needed. projects.create is account-only, not a project scope. Effects: ' + projectScopes.map(s=>s+': '+scopeEffects[s]).join('; ') + ''};return [tool('list_access_targets','Owned project names/IDs and workspaces only, no project content. Use IDs to request approval.'),...(projectScopes.length?[tool('request_project_access','Ask owner to approve exact project/scopes. No access until approval. Never request again while pending.',{projectId:{type:'string'},scopes:scopeSchema},['projectId','scopes'])]:[]),...(scopes.includes('projects.create')&&projectScopes.length?[tool('request_create_project','Propose a project in an owned workspace. Owner approves exact name and project scopes before creation. Use workspaceId from list_access_targets and exact scope enum values: schema.read/schema.propose for database proposals, project.read/files.read/patch.propose for reviewed source. New project is empty and unpublished, workspace visibility follows existing membership permissions and connector access requires this exact approval; no backend or public release is created. Autopilot remains off. Never invent project.create, qa.new-project or backend.typed-public-records scopes.',{workspaceId:{type:'string'},name:{type:'string'},scopes:scopeSchema},['workspaceId','name','scopes'])]:[]),tool('request_status','Poll this connection request. Stop after denied or expired; approved returns projectId.',{requestId:{type:'string'}},['requestId'])];}
 export async function callRequest(name:string,args:any,token:any,env:Env):Promise<any|null>{
  if(!['velnavoq.list_access_targets','velnavoq.request_status','velnavoq.request_project_access','velnavoq.request_create_project'].includes(name))return null;
  if(!token.request_approvals)throw new ApiError(403,'request_consent_required');const now=Date.now();

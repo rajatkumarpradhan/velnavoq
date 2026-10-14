@@ -84,3 +84,8 @@
  .header-projects {display:inline-flex;}
  .sidebar.open {max-height:calc(100dvh - 110px);overflow-y:auto;}
 }
+
+/* Compact schema descriptions stay readable without horizontal scrolling. */
+.public-record-table.schema-field-table{min-width:0;table-layout:fixed}
+.public-record-table.schema-field-table th,.public-record-table.schema-field-table td{min-width:0;max-width:none;white-space:normal;overflow-wrap:anywhere;padding:14px 12px}
+.public-record-table.schema-field-table th:first-child{width:55%}
