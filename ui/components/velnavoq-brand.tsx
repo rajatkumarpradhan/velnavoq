@@ -1,0 +1,4 @@
+import {useEffect} from 'react';
+export function ConnectorMark({connected=false}:{connected?:boolean}){return <div className={'velnavoq-connector-mark '+(connected?'ready':'')}><img src="/velnavoq-connector.svg" alt="Velnavoq connector" width="88" height="88"/>{connected&&<span aria-label="Access approved">✓</span>}</div>}
+// A light on the existing V, not a splash/loading screen. Once per tab, never per route.
+export function BrandArrival(){useEffect(()=>{let first=true;try{first=sessionStorage.getItem('velnavoq-brand-arrival')!=='shown';sessionStorage.setItem('velnavoq-brand-arrival','shown')}catch{}if(!first||matchMedia('(prefers-reduced-motion: reduce)').matches)return;document.documentElement.classList.add('brand-arriving');const t=setTimeout(()=>document.documentElement.classList.remove('brand-arriving'),1100);return()=>{clearTimeout(t);document.documentElement.classList.remove('brand-arriving')}},[]);return null}

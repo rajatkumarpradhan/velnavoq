@@ -77,3 +77,28 @@ it('short remaining consent caps parent and child tokens and denies refresh afte
 it('new renewable grants leave preexisting one-hour token records unchanged',async()=>{
  const {token:old}=await consent();const before=await root(old.access_token);const {token:newer}=await consent(24);expect((await refresh(newer)).status).toBe(200);expect(await root(old.access_token)).toEqual(before);expect((await db.prepare('SELECT count(*) n FROM account_mcp_refresh_families WHERE authorization_id=?').bind(before.id).first<any>()).n).toBe(0);
 });
+
+it('explicit ongoing consent survives access expiry and registration retention without extending old grants',async()=>{
+ expect(newConsentDeadline('until_revoked',100)).toBe(-1);
+ const {token:bounded}=await consent(24),before=await root(bounded.access_token);
+ const {token:t,id}=await consent('until_revoked');expect(t.consent_mode).toBe('until_revoked');expect(t.refresh_token_expires_in).toBeUndefined();expect(t.expires_in).toBeLessThanOrEqual(3600);
+ const p=await root(t.access_token),f:any=await db.prepare('SELECT * FROM account_mcp_refresh_families WHERE authorization_id=?').bind(p.id).first();expect(f.grant_deadline_ms).toBe(-1);
+ await db.prepare('UPDATE account_mcp_tokens SET expires_at=? WHERE id=?').bind(Date.now()-1,p.id).run();await db.prepare('UPDATE account_mcp_clients SET expires_at=? WHERE id=?').bind(Date.now()-1,cid).run();
+ const next:any=await(await refresh(t)).json();expect(next.access_token).toBeTruthy();expect(next.expires_in).toBeLessThanOrEqual(3600);expect(next.consent_mode).toBe('until_revoked');expect((await root(next.access_token)).scopes).toBe(p.scopes);expect(await root(bounded.access_token)).toEqual(before);
+ expect((await refresh(bounded)).status).toBe(400);await db.prepare('UPDATE account_mcp_clients SET expires_at=? WHERE id=?').bind(Date.now()+30*86400000,cid).run();
+ expect((await api('/api/account-mcp')).status).toBe(200);expect((await db.prepare('SELECT renewable_until FROM account_mcp_consents WHERE id=?').bind(id).first<any>()).renewable_until).toBe(-1);
+ expect((await api('/api/account-mcp/tokens/'+p.id+'/revoke',{})).status).toBe(200);expect((await refresh(next)).status).toBe(400);expect((await root(next.access_token)).revoked_at).not.toBeNull();
+});
+it('ongoing refresh enforces binding, replay and atomic concurrency just like bounded grants',async()=>{
+ const {token:t}=await consent('until_revoked');for(const extra of [{client_id:'wrong'},{resource:'https://wrong.test/mcp'},{scope:'projects.create'}])expect((await refresh(t,extra)).status).toBe(400);
+ const next:any=await(await refresh(t)).json();expect(next.access_token).toBeTruthy();expect((await refresh(t)).status).toBe(400);expect((await refresh(next)).status).toBe(400);
+ const {token:x}=await consent('until_revoked');const results=await Promise.all([refresh(x),refresh(x)]);expect(results.map(r=>r.status).sort()).toEqual([200,400]);expect((await db.prepare('SELECT count(*) n FROM account_mcp_refresh_entries WHERE predecessor_hash=?').bind(await digest(x.refresh_token)).first<any>()).n).toBe(1);
+});
+it('ongoing renewal never restores revoked child access or introduces workspace grants',async()=>{
+ const {token:t}=await consent('until_revoked'),p=await root(t.access_token);const g:any=await db.prepare('SELECT * FROM account_mcp_projects WHERE token_id=?').bind(p.id).first();await db.prepare('UPDATE mcp_access_tokens SET revoked_at=? WHERE id=?').bind(Date.now(),g.child_token_id).run();
+ const n:any=await(await refresh(t)).json();expect(n.access_token).toBeTruthy();expect((await root(n.access_token)).workspaces_json).toBe('[]');expect((await db.prepare('SELECT * FROM account_mcp_projects WHERE token_id=?').bind(p.id).first<any>()).child_token_id).toBe(g.child_token_id);expect((await db.prepare('SELECT * FROM mcp_access_tokens WHERE id=?').bind(g.child_token_id).first<any>()).revoked_at).not.toBeNull();
+});
+it('bounded refresh families cannot be upgraded to ongoing after issuance',async()=>{
+ const {token:t}=await consent(24),p=await root(t.access_token);await expect(db.prepare('UPDATE account_mcp_refresh_families SET grant_deadline_ms=-1 WHERE authorization_id=?').bind(p.id).run()).rejects.toThrow();
+ expect((await refresh(t)).status).toBe(200);expect(newConsentDeadline(undefined,10)).toBe(0);for(const bad of ['forever','-1',-1,Infinity])expect(()=>newConsentDeadline(bad,10)).toThrow();
+});

@@ -1,0 +1,18 @@
+import {it,expect} from 'vitest';
+import {connectionScreen,liveAuthorizations,signedInDestination} from '../ui/connector-flow';
+import {registeredProvider} from '../ui/connection-status';
+const now=1000,active={id:'issued',expires_at:2000,revoked_at:null,redirect_uri:'https://grok.com/callback'};
+it('one dedicated setup screen without token or with registration only',()=>{expect(connectionScreen({tokens:[],clients:[{id:'registered'}]},'#mcp',now)).toBe('setup')});
+it('pending consent never counts as connected',()=>{expect(connectionScreen({consents:[{id:'pending'}]},'#mcp',now)).toBe('setup');expect(connectionScreen({consents:[{id:'pending'}]},'#mcp?screen=connected',now)).toBe('waiting')});
+it('exact consent route stays separate even when an existing connection is active',()=>expect(connectionScreen({tokens:[active]},'#mcp?accountConsent=exact',now)).toBe('consent'));
+it('valid existing authorization goes straight to the ready screen, without reconnect',()=>expect(connectionScreen({tokens:[active]},'#mcp',now)).toBe('connected'));
+it('explicit setup remains available for another assistant',()=>expect(connectionScreen({tokens:[active]},'#mcp?screen=setup',now)).toBe('setup'));
+it('revoke and permissions have their own page',()=>expect(connectionScreen({tokens:[active]},'#mcp?screen=access',now)).toBe('access'));
+it('a forged connected hash cannot manufacture success',()=>expect(connectionScreen({tokens:[]},'#mcp?screen=connected',now)).toBe('waiting'));
+it('expired access never claims readiness',()=>expect(connectionScreen({tokens:[{...active,expires_at:999}]},'#mcp?screen=connected',now)).toBe('waiting'));
+it('revoked consent cannot be reused despite future lifetime',()=>expect(liveAuthorizations({tokens:[{...active,revoked_at:1,consent_expires_at:5000}]},now)).toHaveLength(0));
+it('approved renewable consent reuses its deadline without another setup',()=>expect(liveAuthorizations({tokens:[{...active,expires_at:999,consent_expires_at:2000}]},now)).toHaveLength(1));
+it('absolute expiry is not extended by opening the screen',()=>expect(liveAuthorizations({tokens:[{...active,expires_at:999,consent_expires_at:1000}]},now)).toHaveLength(0));
+it('unknown callback never becomes another provider',()=>{expect(registeredProvider('https://grok.com.attacker.example/callback')).toBeNull();expect(registeredProvider('https://synthetic.example.test/callback')).toBeNull()});
+it('only a whitelisted connector sign-in return is honored',()=>{expect(signedInDestination('#signin?next=mcp')).toBe('mcp');expect(signedInDestination('#signin?next=https://evil.test')).toBe('dashboard');expect(signedInDestination('#signin?next=security')).toBe('dashboard')});
+it('ongoing unrevoked grants do not show setup after short-lived access expires',()=>{expect(connectionScreen({tokens:[{expires_at:1,consent_expires_at:-1,revoked_at:null}]},'#mcp',100)).toBe('connected');expect(connectionScreen({tokens:[{expires_at:1,consent_expires_at:-1,revoked_at:2}]},'#mcp',100)).toBe('setup')});

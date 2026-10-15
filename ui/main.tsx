@@ -1,3 +1,5 @@
+import {BrandArrival} from './components/velnavoq-brand';
+import './connector-simple.css';
 import {StudioDashboard,ProjectOverview,BuilderBar} from './components/studio-dashboard';
 import {preparePreviewWindow} from './preview-window';
 const Home=lazy(()=>import('./components/home').then(m=>({default:m.Home})));const AuthScreen=lazy(()=>import('./components/auth').then(m=>({default:m.AuthScreen})));const ServiceScreen=lazy(()=>import('./components/workbench').then(m=>({default:m.ServiceScreen})));
@@ -56,5 +58,5 @@ else content=<><div className="page-title"><div><div className="eyebrow">WORKSPA
 const protectedRoutes=['backend','project','agent','editor','review','files','terminal','preview','logs','repair','approval','permissions','environment','deployment','releases','rollback'];
 if(protectedRoutes.includes(route)&&!nav.selectedProject)content=<><h1>{titleOf(route)}</h1><Panel><Empty title={nav.state==='anonymous'?'Sign in required':'Select a verified project'} detail="This navigation target needs an authenticated workspace and project returned by the backend."><Button onClick={()=>go(nav.state==='anonymous'?'signin':'projects')}>{nav.state==='anonymous'?'Sign in':'Choose a project'}</Button></Empty></Panel></>;
 if(!['home','signin',...routes.map(r=>r[0])].includes(route))content=<><h1>Page not found</h1><ServiceScreen id="404"/></>;
-return <Shell nav={nav}>{nav.selectedProject&&protectedRoutes.includes(route)&&<BuilderBar nav={nav}/>}<Suspense fallback={<Notice>Loading this screen...</Notice>}>{content}</Suspense></Shell>}
+return <Shell nav={nav}><BrandArrival/>{nav.selectedProject&&protectedRoutes.includes(route)&&<BuilderBar nav={nav}/>}<Suspense fallback={<Notice>Loading this screen...</Notice>}>{content}</Suspense></Shell>}
 createRoot(document.getElementById('root')!).render(<React.StrictMode><ChunkBoundary><App/></ChunkBoundary></React.StrictMode>);

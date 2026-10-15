@@ -1,5 +1,6 @@
 import {GlassFilm} from './glass-film';
 import {RequestTimeout} from '../request';
+import {signedInDestination} from '../connector-flow';
 import {oauthResume} from '../connection-resume';
 import React,{useEffect,useState} from 'react';
 import {Button,Field,Notice} from './system';
@@ -10,8 +11,8 @@ export function AuthScreen({go,refresh,sessionState,authenticated}:{go:(r:string
  useEffect(()=>{const v=/^#signin\?verify=([0-9a-f]{64})$/.exec(location.hash);if(v){setToken(v[1]!);setView('verify');history.replaceState(null,'',location.pathname+'#signin');return}const m=/^#signin\?reset=([0-9a-f]{64})$/.exec(location.hash);if(m){setToken(m[1]!);setView('reset');history.replaceState(null,'',location.pathname+'#signin')}},[]);
  useEffect(()=>{sessionStorage.removeItem('velnavoq_idle')},[]);
  // Reuse only a server-verified session; do not mistake a landing-page login link for logout.
- useEffect(()=>{if(sessionState!=='ready'||!authenticated||view!=='signin'||mfaToken)return;const resume=oauthResume(location.hash,location.origin);if(resume){location.assign(resume);return}go('dashboard','','')},[sessionState,authenticated,view,mfaToken]);
- const done=()=>{const resume=oauthResume(location.hash,location.origin);if(resume){location.assign(resume);return}setPassword('');setMfaToken('');setMfaCode('');refresh();go('dashboard','','')};
+ useEffect(()=>{if(sessionState!=='ready'||!authenticated||view!=='signin'||mfaToken)return;const resume=oauthResume(location.hash,location.origin);if(resume){location.assign(resume);return}go(signedInDestination(location.hash),'','')},[sessionState,authenticated,view,mfaToken]);
+ const done=()=>{const resume=oauthResume(location.hash,location.origin);if(resume){location.assign(resume);return}setPassword('');setMfaToken('');setMfaCode('');refresh();go(signedInDestination(location.hash),'','')};
  const run=async(fn:()=>Promise<void>)=>{setBusy(true);setError('');setInfo('');try{await fn()}catch(e){setError(friendly(e instanceof RequestTimeout?'request_timeout':e instanceof Error&&e.message==='kdf_downgrade_refused'?'kdf_downgrade_refused':'connection_unavailable'))}finally{setBusy(false)}};
  const fail=(r:{status:number;body:any})=>{setError(friendly(r.body?.error||'request_failed'));};
  const signin=(e:React.FormEvent)=>{e.preventDefault();run(async()=>{setProgress('Checking account…');const k=await post('/auth/kdf',{email});if(k.status>=400)return fail(k);setProgress('Securing sign-in…');const verifier=await derive(password,k.body.salt,k.body.iterations);setProgress('Opening your workspace…');const r=await post('/auth/login',{email,verifier});if(r.status===401&&r.body.error==='mfa_required'){setMfaToken(r.body.mfaToken);setInfo('Enter the code from your authenticator app.');return}if(r.status>=400)return fail(r);done()})};

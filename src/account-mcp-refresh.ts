@@ -3,14 +3,15 @@ import {canonical,digest,randomToken} from './security';
 export const HOUR=3600000,DAY=24*HOUR;
 export function newConsentDeadline(hours:unknown,now:number){
  if(hours===undefined||hours===1)return 0;
+ if(hours==='until_revoked')return -1;
  if(hours!==24)throw new ApiError(400,'consent_lifetime_invalid');
  return now+DAY;
 }
-const response=(access:string,expires:number,scopes:string,refresh?:string,deadline?:number)=>Response.json({access_token:access,token_type:'Bearer',expires_in:Math.max(0,Math.floor((expires-Date.now())/1000)),scope:JSON.parse(scopes).join(' '),...(refresh?{refresh_token:refresh,refresh_token_expires_in:Math.max(0,Math.floor((deadline!-Date.now())/1000))}:{})},{headers:{'cache-control':'no-store','pragma':'no-cache'}});
+const response=(access:string,expires:number,scopes:string,refresh?:string,deadline?:number)=>Response.json({access_token:access,token_type:'Bearer',expires_in:Math.max(0,Math.floor((expires-Date.now())/1000)),scope:JSON.parse(scopes).join(' '),...(refresh?{refresh_token:refresh,...(deadline===-1?{consent_mode:'until_revoked'}:{refresh_token_expires_in:Math.max(0,Math.floor((deadline!-Date.now())/1000))})}:{})},{headers:{'cache-control':'no-store','pragma':'no-cache'}});
 export {response as accountTokenResponse};
 export async function initialRefresh(env:Env,row:any,id:string,now:number){
  if(!row.renewable_until)return {statements:[] as D1PreparedStatement[],refresh:undefined as string|undefined};
- if(row.renewable_until<=now||row.renewable_until>now+DAY)throw new ApiError(400,'invalid_grant');
+ if(row.renewable_until!==-1&&(row.renewable_until<=now||row.renewable_until>now+DAY))throw new ApiError(400,'invalid_grant');
  const family=crypto.randomUUID(),refresh=randomToken();
  return {refresh,statements:[env.DB.prepare('INSERT INTO account_mcp_refresh_families(id,authorization_id,client_id,user_id,resource,scopes_json,grant_deadline_ms,created_at) VALUES(?,?,?,?,?,?,?,?)').bind(family,id,row.client_id,row.user_id,new URL(env.APP_ORIGIN).origin+'/mcp',row.scopes,row.renewable_until,now),env.DB.prepare('INSERT INTO account_mcp_refresh_entries(token_hash,family_id,expires_at,created_at) VALUES(?,?,?,?)').bind(await digest(refresh),family,row.renewable_until,now)]};
 }
@@ -23,10 +24,10 @@ export async function refreshAccount(env:Env,f:URLSearchParams){
  // Wrong clients/resources cannot revoke another client's authorization.
  if(!row||f.get('client_id')!==row.client_id||(f.has('resource')&&f.get('resource')!==row.resource))return fail();
  if(row.consumed_at!==null){await revokeFamily(env,row.id);return fail()}
- if(row.revoked_at!==null||row.token_revoked!==null||now>=row.grant_deadline_ms||now>=row.refresh_expiry||now>=row.client_expiry||row.token_scopes!==row.scopes_json)return fail();
+ if(row.revoked_at!==null||row.token_revoked!==null||(row.grant_deadline_ms!==-1&&(now>=row.grant_deadline_ms||now>=row.client_expiry))||(row.refresh_expiry!==-1&&now>=row.refresh_expiry)||row.token_scopes!==row.scopes_json)return fail();
  // No scope changes through refresh; a fresh owner consent is required instead.
  if(f.has('scope')&&canonical(f.get('scope')!.split(' ').sort())!==canonical((JSON.parse(row.scopes_json) as string[]).sort()))throw new ApiError(400,'invalid_scope');
- const access=randomToken(),refresh=randomToken(),expires=Math.min(now+HOUR,row.grant_deadline_ms),accessHash=await digest(access);
+ const access=randomToken(),refresh=randomToken(),expires=row.grant_deadline_ms===-1?now+HOUR:Math.min(now+HOUR,row.grant_deadline_ms),accessHash=await digest(access);
  const children=(await env.DB.prepare('SELECT g.*,t.scopes FROM account_mcp_projects g JOIN mcp_access_tokens t ON t.id=g.child_token_id JOIN mcp_clients c ON c.id=g.child_client_id WHERE g.token_id=? AND t.revoked_at IS NULL AND c.revoked_at IS NULL').bind(row.authorization_id).all<any>()).results;
  const statements=[
  // D1 batch is transactional. The predecessor UNIQUE key + insert guard elect one winner;
