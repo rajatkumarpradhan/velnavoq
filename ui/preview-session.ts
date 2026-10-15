@@ -12,3 +12,11 @@ export async function createPreviewSession(pid:string,jobId:string,signal:AbortS
  }
  return session;
 }
+
+/** Resume only a server-authorized existing session; never create a replacement. */
+export async function openPreviewSession(pid:string,id:string,signal:AbortSignal):Promise<PreviewSession>{
+ if(signal.aborted)throw Error('Preview cancelled.');
+ const session=await api<PreviewSession>('/projects/'+pid+'/preview/'+id+'/open',{method:'POST',body:'{}'});
+ if(signal.aborted)throw Error('Preview cancelled.');
+ return session;
+}
