@@ -1,3 +1,5 @@
+import './private-build.css';
+const PrivateBuild=lazy(()=>import('./components/private-build').then(m=>({default:m.PrivateBuild})));
 import {BrandArrival} from './components/velnavoq-brand';
 import './connector-simple.css';
 import {StudioDashboard,ProjectOverview,BuilderBar} from './components/studio-dashboard';
@@ -37,6 +39,7 @@ else if(route==='signin')content=<AuthScreen go={go} refresh={nav.refresh} sessi
 else if(nav.state==='ready'&&!nav.workspaces.length&&['dashboard','projects','create'].includes(route))content=<><div className="page-title"><div><div className="eyebrow">WELCOME</div><h1>Name your workspace.</h1><p>A workspace holds your projects. You can add teammates later.</p></div></div><WorkspaceCreate nav={nav}/></>;
 else if(route==='dashboard'||route==='projects'||route==='workspaces'||route==='project')content=route==='project'&&nav.selectedProject?<ProjectOverview nav={nav}/>:<StudioDashboard nav={nav}/>;
 else if(['editor','files','review','approval'].includes(route))content=<Suspense fallback={<Panel title="Source editor"><Notice>Loading editor...</Notice></Panel>}><ProjectEditor nav={nav} reviewOnly={route==='review'||route==='approval'}/></Suspense>;
+else if(route==='build')content=<Suspense fallback={<Notice>Loading your app build...</Notice>}><PrivateBuild key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='backend')content=<Suspense fallback={<Notice>Loading schema...</Notice>}><ProjectBackend key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='agent')content=<Suspense fallback={<Notice>Loading AI workspace...</Notice>}><ProjectAgent key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='deployment')content=<Suspense fallback={<Notice>Loading deployment status...</Notice>}><ProjectDeployment key={nav.selectedProject?.id} nav={nav}/></Suspense>;
@@ -53,9 +56,9 @@ else if(route==='create')content=<><h1>Create project</h1><ProjectCreate nav={na
 else if(route==='usage')content=<Suspense fallback={<Notice>Loading usage...</Notice>}><ProjectUsage key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='account')content=<><h1>Your account</h1><Panel title={nav.user?.email||'Sign in required'}><div className="service-detail"><p>{nav.user?'Your current session is authenticated. Use the user menu to sign out.':'No authenticated session loaded.'}</p><p>Memberships: {nav.state==='ready'?nav.workspaces.length:'Unavailable'}</p></div></Panel>{nav.user&&<Sessions nav={nav}/>}</>;
 else if(route==='settings')content=<><h1>Workspace membership</h1><Members nav={nav}/></>;
-else if(route==='security')content=<><div className="page-title"><div><div className="eyebrow">TRUST / BOUNDARIES</div><h1>Control stays with you.</h1><p>Security is part of the work, not a badge at the end.</p></div></div><Panel title="Architecture boundaries"><div className="status-row"><span>Untrusted code in control plane</span><Badge>Never allowed</Badge></div><div className="status-row"><span>Preview on main app origin</span><Badge>Never allowed</Badge></div><div className="status-row"><span>Model auto-approval</span><Badge>Disabled</Badge></div></Panel></>;
+else if(route==='security')content=<><div className="page-title"><div><div className="eyebrow">TRUST / BOUNDARIES</div><h1>Control stays with you.</h1><p>Security is part of the work, not a badge at the end.</p></div></div><Panel title="Architecture boundaries"><div className="status-row"><span>Untrusted code in control plane</span><Badge>Never allowed</Badge></div><div className="status-row"><span>Preview on main app origin</span><Badge>Never allowed</Badge></div><div className="status-row"><span>Private-build automation</span><Badge>Explicit project opt-in only</Badge></div></Panel></>;
 else content=<><div className="page-title"><div><div className="eyebrow">WORKSPACE / {titleOf(route).toUpperCase()}</div><h1>{titleOf(route)}</h1><p>Clear state. No simulated activity.</p></div></div><ServiceScreen id={route}/></>;
-const protectedRoutes=['backend','project','agent','editor','review','files','terminal','preview','logs','repair','approval','permissions','environment','deployment','releases','rollback'];
+const protectedRoutes=['build','backend','project','agent','editor','review','files','terminal','preview','logs','repair','approval','permissions','environment','deployment','releases','rollback'];
 if(protectedRoutes.includes(route)&&!nav.selectedProject)content=<><h1>{titleOf(route)}</h1><Panel><Empty title={nav.state==='anonymous'?'Sign in required':'Select a verified project'} detail="This navigation target needs an authenticated workspace and project returned by the backend."><Button onClick={()=>go(nav.state==='anonymous'?'signin':'projects')}>{nav.state==='anonymous'?'Sign in':'Choose a project'}</Button></Empty></Panel></>;
 if(!['home','signin',...routes.map(r=>r[0])].includes(route))content=<><h1>Page not found</h1><ServiceScreen id="404"/></>;
 return <Shell nav={nav}><BrandArrival/>{nav.selectedProject&&protectedRoutes.includes(route)&&<BuilderBar nav={nav}/>}<Suspense fallback={<Notice>Loading this screen...</Notice>}>{content}</Suspense></Shell>}

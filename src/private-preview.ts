@@ -1,3 +1,4 @@
+import {assertPrivateBuildPreview} from './private-build-access';
 import {ApiError,type Env,type Identity} from './contracts';
 import {project} from './auth';
 import {canonical,digest,readBody} from './security';
@@ -28,7 +29,7 @@ export async function privatePreviewApi(req:Request,env:Env,who:Identity):Promis
  if(req.method!=='POST')throw new ApiError(405,'preview_transport_post_required');
  // The controller router validates platform session/Origin/CSRF before entering here.
  const preview=await env.DB.prepare('SELECT v.*,j.revision FROM previews v JOIN build_jobs j ON j.id=v.job_id WHERE v.id=? AND v.project_id=? AND v.user_id=?').bind(m[2],m[1],who.userId).first<any>();
- if(!preview)throw new ApiError(404,'preview_not_found');
+ if(!preview)throw new ApiError(404,'preview_not_found');await assertPrivateBuildPreview(env,preview.id);
  if(preview.expires_at<=Date.now()||['stopped','expired','timed_out'].includes(preview.status)){await clearExpiredPreviewData(env);throw new ApiError(410,'preview_expired');}
  const p=await project(env,who.userId,m[1]!,['owner','editor']);if(p.revision!==preview.revision)throw new ApiError(409,'stale_preview_build');
  if(!preview.backend_config_json)throw new ApiError(409,'preview_approved_private_schema_required');

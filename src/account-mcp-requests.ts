@@ -9,7 +9,7 @@ export const scopeEffects:Record<string,string>={
  'project.read':'Read granted project metadata; no private app records.',
  'files.read':'Read granted source paths/files; secret-bearing files refused.',
  'patch.propose':'Propose exact source changes; owner must approve before applying.',
- 'sandbox.write':'Apply source only with a separate active owner sandbox consent; never publishes.',
+ 'sandbox.write':'Apply source only with separate sandbox consent, or a complete non-destructive private build with NEW project/client private-build consent. Existing connections never enroll automatically. Never publishes.',
  'checks.run':'Run static source checks; never publishes or executes backend code.',
  'preview.create':'Prepare saved source preview; privateBackend:true uses an exactly owner-approved version-2 schema for isolated login/database preview. No public activation or app-row access via MCP.',
  'repair.run':'Repair static source with separate active sandbox consent; never publishes.',
@@ -19,10 +19,11 @@ export const scopeEffects:Record<string,string>={
 };
 export function requestCapabilities(granted:string[]){const allowed=mcpScopes.filter(s=>granted.includes(s));return {
  backend:{configContract:backendContract,privateExample:privateBackendExample,requiresExactOwnerApproval:true},
+ privateBuild:{statusTool:'velnavoq.private_build_status',buildTool:'velnavoq.build_private_app',scopes:['sandbox.write','schema.propose','checks.run','preview.create'],permission:'New opt-in per project/client only; existing grants unchanged. Without it, one source+private-schema exact Review app approval.',result:'Checked isolated private preview with direct owner entry, never a public release.',limits:'Non-destructive source plus additive non-sensitive version-2 schema. No arbitrary functions, provider secrets, payments, public publish or deletes.'},
  scopeCatalog:mcpScopes.map(scope=>({scope,effect:scopeEffects[scope],requestable:allowed.includes(scope)})),
  requestableProjectScopes:allowed,
  accountCreation:{scope:'projects.create',granted:granted.includes('projects.create'),effect:'Allows proposing creation; never include this account scope in requested project scopes. Owner approves exact workspace/name/scopes.'},
- creationDefaults:{publication:'unpublished',visibility:'Workspace visibility follows existing membership permissions; connector access requires an exact approved project grant. No public application is deployed.',source:'empty',backend:'none',autopilot:false,notice:'Creation writes no release, source or backend schema. A separate reviewed publish is required for any public app. Private app-user data requires a separately approved version-2 owner-isolated schema; unpublished is not a private-row schema.'},
+ creationDefaults:{publication:'unpublished',visibility:'Workspace visibility follows existing membership permissions; connector access requires an exact approved project grant. No public application is deployed.',source:'empty',backend:'none',autopilot:false,notice:'Creation writes no release, source or backend schema. A separate reviewed publish is required for any public app. Private app-user data requires a version-2 owner-isolated schema approved in exact review or covered by NEW project-specific private-build permission; unpublished is not a private-row schema.'},
  limitations:['No arbitrary server functions, payments or password recovery.','Default preview is visual-only. Optional privateBackend:true supports an isolated private backend after exact schema approval; not a public release.'],
  requestProcedure:'List access targets, use exact returned workspaceId/projectId, request only requestableProjectScopes, wait for exact owner approval, poll request_status. Denied or expired requests must not be retried.'
 };}

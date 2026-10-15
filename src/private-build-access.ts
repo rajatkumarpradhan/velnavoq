@@ -1,0 +1,5 @@
+import {ApiError,type Env} from './contracts';
+/** New build previews follow active project/client authority, including same-client OAuth renewal. Legacy previews are unchanged. */
+export async function assertPrivateBuildPreview(env:Env,id:string){const row=await env.DB.prepare(`SELECT q.grant_id,g.revoked_at grant_revoked,c.revoked_at client_revoked,
+EXISTS(SELECT 1 FROM mcp_access_tokens t WHERE t.client_id=q.client_id AND t.project_id=q.project_id AND t.user_id=q.owner_id AND t.revoked_at IS NULL AND t.expires_at>? AND EXISTS(SELECT 1 FROM json_each(t.scopes) WHERE value='sandbox.write') AND EXISTS(SELECT 1 FROM json_each(t.scopes) WHERE value='schema.propose') AND EXISTS(SELECT 1 FROM json_each(t.scopes) WHERE value='checks.run') AND EXISTS(SELECT 1 FROM json_each(t.scopes) WHERE value='preview.create')) token_active
+FROM private_build_packages q JOIN mcp_clients c ON c.id=q.client_id LEFT JOIN private_build_grants g ON g.id=q.grant_id WHERE q.preview_id=?`).bind(Date.now(),id).first<any>();if(row&&(row.client_revoked!==null||!row.token_active||row.grant_id&&row.grant_revoked!==null))throw new ApiError(410,'private_build_permission_ended');}
