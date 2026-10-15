@@ -52,7 +52,7 @@ else if(route==='preview')content=<Suspense fallback={<Notice>Loading preview...
 else if(route==='observability')content=<Suspense fallback={<Notice>Loading actual events...</Notice>}><ProjectObservability key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='logs')content=<Suspense fallback={<Notice>Loading static builder...</Notice>}><ProjectBuild key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='terminal')content=<Suspense fallback={<Notice>Loading local runtime...</Notice>}><ProjectTerminal key={nav.selectedProject?.id} nav={nav}/></Suspense>;
-else if(route==='create')content=<><h1>Create project</h1><ProjectCreate nav={nav}/></>;
+else if(route==='create')content=<ProjectCreate nav={nav}/>;
 else if(route==='usage')content=<Suspense fallback={<Notice>Loading usage...</Notice>}><ProjectUsage key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='account')content=<><h1>Your account</h1><Panel title={nav.user?.email||'Sign in required'}><div className="service-detail"><p>{nav.user?'Your current session is authenticated. Use the user menu to sign out.':'No authenticated session loaded.'}</p><p>Memberships: {nav.state==='ready'?nav.workspaces.length:'Unavailable'}</p></div></Panel>{nav.user&&<Sessions nav={nav}/>}</>;
 else if(route==='settings')content=<><h1>Workspace membership</h1><Members nav={nav}/></>;

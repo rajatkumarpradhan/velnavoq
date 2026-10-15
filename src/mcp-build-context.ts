@@ -1,0 +1,32 @@
+/** Read-only build handoff. It explains the next executable action without granting authority. */
+import {privateBackendContract,privateBackendExample} from './backend-contract';
+import {type Env} from './contracts';
+import {project} from './auth';
+import {digest} from './security';
+import {sandboxSource} from './mcp-sandbox';
+import {privateBuildSchema,privateBuildScopes} from './private-build';
+export const sourceFilePolicy={extensions:['html','css','js','json','svg','txt'],instruction:'Read only paths returned by list_files. README.md and arbitrary repository/server files are not supported. Empty source means create index.html and assets, not look for a README.'};
+export const privateRuntimeContract={global:'window.velnavoq',authentication:'Use auth.signIn() to open the trusted shell sign-in/sign-up dialog; it returns {pending:true}, not a completed login. auth.me() returns {userId,email} or null. Listen for vln-auth-changed then re-read auth.me(). Never build password inputs in generated source.',methods:{'data.list(table)':'Promise<{rows:Array<{id,...fields,createdAt,updatedAt}>}>; use result.rows, not result directly','data.create(table,row)':'Promise<{id}>','data.update(table,id,row)':'Promise<{updated:true}>; send all required schema fields','data.remove(table,id)':'Promise<{deleted:true}>','auth.signOut()':'Promise<{signedOut:true}>'},isolation:'Version-2 schema: each signed-in app user can only read/write their own rows. No shared school administrator roles, anonymous admissions inbox or cross-user admin access. Do not fake those with hidden buttons or public tables.',execution:'Static HTML/CSS/JS and the trusted injected SDK only; no arbitrary server functions, payment processing or configured email delivery. Never pretend localStorage is the database.'};
+export const buildWorkflow='For a new app, create or request exactly one separate project, then read private_build_status. Compose the actual frontend plus supported version-2 private schema and submit build_private_app. When privateBuildEnabled is true, ordinary bounded source/schema/check/preview work runs without another technical approval. When false, still submit the complete package for one exact owner review; this is not a reason to stop building. Do not stop at an empty project, repeatedly poll unchanged status or ask the owner to write code. Never invent school details. Preserve existing projects. Public publication is separate.';
+export async function privateBuildContext(env:Env,t:any){
+ const p=await project(env,t.user_id,t.project_id,['owner']);const s=await sandboxSource(env,p.id);const currentSchema=await privateBuildSchema(env,p.id);
+ const privateBuildEnabled=!!await env.DB.prepare('SELECT id FROM private_build_grants WHERE client_id=? AND project_id=? AND owner_id=? AND revoked_at IS NULL').bind(t.client_id,p.id,t.user_id).first();
+ const missingScopes=privateBuildScopes.filter(scope=>!JSON.parse(t.scopes).includes(scope));
+ const root=new URL(env.APP_ORIGIN).origin,reviewUrl=root+'/#build?'+new URLSearchParams({workspace:p.workspace_id,project:p.id});
+ const pkg=await env.DB.prepare("SELECT id,digest,status,base_revision,preview_id FROM private_build_packages WHERE project_id=? AND client_id=? AND owner_id=? ORDER BY created_at DESC,id DESC LIMIT 1").bind(p.id,t.client_id,t.user_id).first<any>();
+ const preview=pkg?.preview_id?await env.DB.prepare('SELECT status,expires_at FROM previews WHERE id=?').bind(pkg.preview_id).first<any>():null;
+ const pending=pkg?.status==='pending'&&pkg.base_revision===s.revision;
+ const active=preview&&preview.expires_at>Date.now()&&!['stopped','expired','timed_out'].includes(preview.status);
+ const approved=pkg?.status==='approved'&&s.revision===pkg.base_revision+1;
+ const action=missingScopes.length?'request_exact_project_scopes':pending?'review_exact_package':active&&approved?'open_private_preview':approved&&!pkg.preview_id?'resume_approved_preview':approved?'prepare_private_preview':'submit_build_package';
+ return {revision:s.revision,sourceDigest:s.sourceDigest,currentSchema,privateBuildEnabled,reviewUrl,
+  buildInput:{baseRevision:s.revision,sourceDigest:s.sourceDigest,baseBackendDigest:currentSchema?.digest??null},
+  sourceFiles:JSON.parse(t.scopes).includes('files.read')?await Promise.all(Object.entries(s.files).map(async([path,content])=>({path,digest:await digest(content)}))):undefined,
+  sourceFilePolicy,backendContract:privateBackendContract,backendExample:privateBackendExample,runtime:privateRuntimeContract,missingScopes,canSubmitBuild:missingScopes.length===0,
+  nextAction:{action,tool:action==='submit_build_package'?'velnavoq.build_private_app':action==='prepare_private_preview'?'velnavoq.preview':null,...(action==='prepare_private_preview'?{arguments:{baseRevision:s.revision,sourceDigest:s.sourceDigest,privateBackend:true}}:{}),
+   ...(pending||approved?{packageId:pkg.id,reviewUrl:reviewUrl+'&package='+encodeURIComponent(pkg.id)}:{}),
+   ...(active&&approved?{previewUrl:root+'/#preview?'+new URLSearchParams({workspace:p.workspace_id,project:p.id,session:pkg.preview_id})}:{}),
+   instruction:action==='submit_build_package'?buildWorkflow:action==='review_exact_package'?'Return this exact Review app URL. The source and private schema are prepared, not applied. Do not submit another package or poll until the owner decides.':action==='resume_approved_preview'?'Source and private schema are already approved. Open the exact Review app URL to resume preview only; never reapply or resubmit.':action==='prepare_private_preview'?'The previous preview ended. Prepare a new private preview from this approved source/schema; do not submit duplicate source.':action==='open_private_preview'?'Return this owner-only preview URL; static checks are not proof of rendered functionality.':'Request only missingScopes through the existing exact project-access approval flow. Do not reconnect, widen scopes silently or pretend the build is complete.'},
+  published:false,functionallyVerified:false};
+}
+export function sourcePathError(code:string){return code==='agent_path_denied'?{sourceFilePolicy,nextAction:'Do not repeat the denied path. For an existing app use list_files and only read returned supported paths. For an empty app use private_build_status then build_private_app with new source and schema.'}:{};}

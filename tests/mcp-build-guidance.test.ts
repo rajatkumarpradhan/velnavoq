@@ -1,0 +1,7 @@
+import {it,expect} from 'vitest';
+import {sourcePathError,sourceFilePolicy,buildWorkflow,privateRuntimeContract} from '../src/mcp-build-context';
+import {safePath} from '../src/coding-agent';
+import {mcpTools} from '../src/mcp';
+import {requestTools,requestCapabilities} from '../src/account-mcp-requests';
+it('declared source extensions match safePath; denied README gives actionable recovery without lowering policy',()=>{for(const ext of sourceFilePolicy.extensions)expect(safePath('example.'+ext)).toBe('example.'+ext);for(const path of ['README.md','../index.html','secrets.txt','.env'])expect(()=>safePath(path)).toThrow('agent_path_denied');expect(sourcePathError('agent_path_denied').nextAction).toContain('build_private_app');expect(sourcePathError('unrelated')).toEqual({});expect(mcpTools.find(x=>x.name==='velnavoq.files')?.description).toContain('README.md');});
+it('create action describes real request and granted capabilities include workflow/SDK rather than fake completion',()=>{const c=requestCapabilities(['projects.create','project.read']);expect(c.buildWorkflow).toBe(buildWorkflow);expect(c.runtime).toBe(privateRuntimeContract);expect(c.privateBuild.publicPublish).toBeUndefined();const t=requestTools(['projects.create','project.read']).find(x=>x.name==='velnavoq.request_create_project')!;expect(t.title).toContain('Create app');expect(t.description).toContain('empty and unpublished');expect(mcpTools.find(x=>x.name==='velnavoq.private_build_status')?.description).toContain('not a blocker');});
