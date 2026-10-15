@@ -8,7 +8,7 @@ export async function adminPublicData(db:D1Database,projectId:string,table:strin
  if(!b||await digest(b.config_json)!==b.digest)throw Error('backend_not_active');
  const config=validateBackend(JSON.parse(b.config_json));
  if(config.version===2)throw Error('private_rows_no_owner_console_access');
- const t=config.tables.find(t=>t.name===table);if(!t)throw Error('table_not_found');
+ const t=config.tables.find(t=>t.name===table);if(!t)throw Error('table_not_found');if(config.version===3&&t.permissions.read==='owner')throw Error('private_rows_no_owner_console_access');
  if(operation==='list')return (await db.prepare('SELECT id,data_json FROM target_backend_rows WHERE project_id=? AND table_name=? ORDER BY id LIMIT 100').bind(projectId,table).all()).results;
  if(!['create','update','delete'].includes(operation))throw Error('operation_denied');
  // Owner management is independent of anonymous read/create permissions.

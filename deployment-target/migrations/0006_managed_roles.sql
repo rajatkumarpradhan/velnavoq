@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS target_app_roles(project_id TEXT NOT NULL,user_id TEXT NOT NULL,role TEXT NOT NULL CHECK(role='admin'),created_at INTEGER NOT NULL,PRIMARY KEY(project_id,user_id),FOREIGN KEY(project_id,user_id) REFERENCES target_app_users(project_id,id) ON DELETE CASCADE);

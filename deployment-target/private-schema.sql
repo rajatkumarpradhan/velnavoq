@@ -5,3 +5,4 @@ CREATE TABLE IF NOT EXISTS target_app_rows(project_id TEXT NOT NULL,table_name T
 CREATE INDEX IF NOT EXISTS target_app_row_owner ON target_app_rows(project_id,user_id,table_name,id);
 CREATE TRIGGER IF NOT EXISTS target_app_row_identity BEFORE UPDATE OF project_id,table_name,id,user_id,created_at ON target_app_rows BEGIN SELECT RAISE(ABORT,'immutable_app_row_identity'); END;
 CREATE TABLE IF NOT EXISTS target_app_auth_config(key TEXT PRIMARY KEY,value TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS target_app_roles(project_id TEXT NOT NULL,user_id TEXT NOT NULL,role TEXT NOT NULL CHECK(role='admin'),created_at INTEGER NOT NULL,PRIMARY KEY(project_id,user_id),FOREIGN KEY(project_id,user_id) REFERENCES target_app_users(project_id,id) ON DELETE CASCADE);

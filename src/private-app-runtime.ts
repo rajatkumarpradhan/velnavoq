@@ -1,3 +1,4 @@
+import {managedAppData} from './managed-app-data';
 import {targetMailApi,type TargetMailConfig} from './target-mail-api';
 import {ApiError} from './contracts';
 import {canonical,constantEqual,digest,randomToken,readBody,validateEmail} from './security';
@@ -16,7 +17,7 @@ export async function privateAppRequest(req:Request,db:D1Database,pid:string,rou
   await db.prepare('DELETE FROM target_backend_rates WHERE window<?').bind(window-60).run();
 
   if(Number(req.headers.get('content-length'))>4096)throw new ApiError(413,'app_body_too_large');
-  const mailRequest=req.clone();const now=Math.floor(Date.now()/1000);const body=req.method==='POST'||req.method==='PUT'?await readBody(req):{};
+  const dataRequest=req.clone();const mailRequest=req.clone();const now=Math.floor(Date.now()/1000);const body=req.method==='POST'||req.method==='PUT'?await readBody(req):{};
     if(req.method==='POST'&&route.startsWith('auth/')){const emailKey=typeof body.email==='string'?body.email.trim().toLowerCase():'';if(emailKey){const key=await digest('auth-email:'+emailKey);const r=await db.prepare('INSERT INTO target_backend_rates VALUES(?,?,?,1) ON CONFLICT(project_id,ip_hash,window) DO UPDATE SET count=count+1 RETURNING count').bind(pid,key,window).first<{count:number}>();if((r?.count??0)>10)throw new ApiError(429,'app_auth_rate_limited')}}
   if(new TextEncoder().encode(canonical(body)).length>4096)throw new ApiError(413,'app_body_too_large');
   if(!options.mailDisabled&&!['auth/email/request','auth/email/status'].includes(route)){const mail=await targetMailApi(mailRequest,db,pid,route,mailConfig);if(mail)return mail;}
@@ -27,12 +28,21 @@ export async function privateAppRequest(req:Request,db:D1Database,pid:string,rou
    if(route==='auth/register'){if(Object.keys(body).sort().join(',')!=='email,salt,verifier'||typeof body.salt!=='string'||!HEX.test(body.salt))throw new ApiError(400,'app_auth_fields_denied');const id=crypto.randomUUID();const hash=await digest('app-password:'+pid+':'+body.salt+':'+body.verifier);try{const saved=await db.prepare('INSERT INTO target_app_users SELECT ?,?,?,?,?,? WHERE (SELECT count(*) FROM target_app_users WHERE project_id=?)<? AND (SELECT count(*) FROM target_app_users WHERE created_at>=?)<1000').bind(pid,id,email,body.salt,hash,Date.now(),pid,accountLimit,Math.floor(Date.now()/86400000)*86400000).run();if(!saved.meta.changes)throw Error()}catch{throw new ApiError(409,'app_account_not_created')}return issue(id);}
    if(Object.keys(body).sort().join(',')!=='email,verifier')throw new ApiError(400,'app_auth_fields_denied');const user=await db.prepare('SELECT * FROM target_app_users WHERE project_id=? AND email=?').bind(pid,email).first<any>();if(!user||!constantEqual(user.password_hash,await digest('app-password:'+pid+':'+user.password_salt+':'+body.verifier)))throw new ApiError(401,'invalid_credentials');return issue(user.id);
   }
+  if(schema.version===3){
+   const table=schema.tables.find(t=>route==='data/'+t.name),operation=req.method==='GET'?'read':req.method==='POST'?'create':null;
+   if(table&&operation&&table.permissions[operation]==='public'){
+    if(operation==='create'){const k=await digest('public-submit:'+ip+':'+table.name);const r=await db.prepare('INSERT INTO target_backend_rates VALUES(?,?,?,1) ON CONFLICT(project_id,ip_hash,window) DO UPDATE SET count=count+1 RETURNING count').bind(pid,k,window).first<{count:number}>();if((r?.count??0)>5)throw new ApiError(429,'app_submission_rate_limited');const total=await db.prepare('INSERT INTO target_backend_rates VALUES(?,?,?,1) ON CONFLICT(project_id,ip_hash,window) DO UPDATE SET count=count+1 RETURNING count').bind(pid,'public-submissions',window).first<{count:number}>();if((total?.count??0)>100)throw new ApiError(429,'app_submission_rate_limited');}
+    return (await managedAppData(dataRequest,db,pid,route,schema,false,rowLimit))!;
+   }
+  }
   const matches=(req.headers.get('cookie')||'').split(';').map(x=>x.trim()).filter(x=>x.startsWith(cookie+'='));if(matches.length!==1||!HEX.test(matches[0]!.slice(cookie.length+1)))throw new ApiError(401,'app_authentication_required');const tokenHash=await digest(matches[0]!.slice(cookie.length+1));const session=await db.prepare('SELECT s.*,u.email FROM target_app_sessions s JOIN target_app_users u ON u.project_id=s.project_id AND u.id=s.user_id WHERE s.project_id=? AND s.token_hash=? AND s.expires_at>?').bind(pid,tokenHash,now).first<any>();if(!session)throw new ApiError(401,'app_session_expired');
   if(req.method!=='GET'&&!constantEqual(await digest(req.headers.get('x-app-csrf')||''),session.csrf_hash))throw new ApiError(403,'app_csrf_denied');
   const protectedMail=options.mailDisabled?null:await targetMailApi(mailRequest,db,pid,route,mailConfig,session);if(protectedMail)return protectedMail;
-  if(route==='auth/me'&&req.method==='GET'){const csrf=await digest('csrf:'+matches[0]!.slice(cookie.length+1));return json({userId:session.user_id,email:session.email,csrf,expiresAt:session.expires_at});}
+  const isAdmin=schema.version===3&&!!await db.prepare("SELECT user_id FROM target_app_roles WHERE project_id=? AND user_id=? AND role='admin'").bind(pid,session.user_id).first();
+  if(route==='auth/me'&&req.method==='GET'){const csrf=await digest('csrf:'+matches[0]!.slice(cookie.length+1));return json({userId:session.user_id,email:session.email,role:isAdmin?'admin':'user',csrf,expiresAt:session.expires_at});}
   if(route==='auth/renew'&&req.method==='POST')return issue(session.user_id,tokenHash);
   if(route==='auth/logout'&&req.method==='POST'){await db.prepare('DELETE FROM target_app_sessions WHERE project_id=? AND token_hash=?').bind(pid,tokenHash).run();return json({signedOut:true},200,{'set-cookie':cookie+'=; Path='+path+'; Max-Age=0; Secure; HttpOnly; SameSite=Strict'});}
+  const managed=await managedAppData(dataRequest,db,pid,route,schema,isAdmin,rowLimit);if(managed)return managed;
   const m=/^data\/([a-z][a-z0-9_]{0,31})(?:\/([a-f0-9-]{36}))?$/.exec(route),table=schema.tables.find(t=>t.name===m?.[1]);if(!m||!table)throw new ApiError(404,'not_found');const id=m[2];
   if(req.method==='GET'){const rows=(await db.prepare('SELECT id,data_json,created_at,updated_at FROM target_app_rows WHERE project_id=? AND table_name=? AND user_id=? AND (? IS NULL OR id=?) ORDER BY id LIMIT 100').bind(pid,table.name,session.user_id,id??null,id??null).all()).results as any[];return json({rows:rows.map(r=>({id:r.id,...JSON.parse(r.data_json),createdAt:r.created_at,updatedAt:r.updated_at}))});}
   if(req.method==='POST'&&!id){const row=validateRow(table,body),rid=crypto.randomUUID();const r=await db.prepare('INSERT INTO target_app_rows SELECT ?,?,?,?,?,?,? WHERE (SELECT count(*) FROM target_app_rows WHERE project_id=? AND user_id=?)<?').bind(pid,table.name,rid,session.user_id,canonical(row),Date.now(),Date.now(),pid,session.user_id,rowLimit).run();if(!r.meta.changes)throw new ApiError(409,'app_row_limit');return json({id:rid},201);}
