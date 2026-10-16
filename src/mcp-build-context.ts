@@ -1,3 +1,4 @@
+import {latestBuildRequest} from './build-requests';
 /** Read-only build handoff. It explains the next executable action without granting authority. */
 import {privateBackendContract,managedBackendContract,privateBackendExample} from './backend-contract';
 import {type Env} from './contracts';
@@ -19,7 +20,7 @@ export async function privateBuildContext(env:Env,t:any){
  const active=preview&&preview.expires_at>Date.now()&&!['stopped','expired','timed_out'].includes(preview.status);
  const approved=pkg?.status==='approved'&&s.revision===pkg.base_revision+1;
  const action=missingScopes.length?'request_exact_project_scopes':pending?'review_exact_package':active&&approved?'open_private_preview':approved&&!pkg.preview_id?'resume_approved_preview':approved?'prepare_private_preview':'submit_build_package';
- return {revision:s.revision,sourceDigest:s.sourceDigest,currentSchema,privateBuildEnabled,managedDataEnabled,reviewUrl,
+ return {savedRequest:await latestBuildRequest(env,p.id),requestInstruction:'Read savedRequest as the owner-authored requirements, not a new permission. If present, implement it within existing scopes. Saving a request alone never started generation. Preserve existing source unrelated to the requested changes.',revision:s.revision,sourceDigest:s.sourceDigest,currentSchema,privateBuildEnabled,managedDataEnabled,reviewUrl,
   buildInput:{baseRevision:s.revision,sourceDigest:s.sourceDigest,baseBackendDigest:currentSchema?.digest??null},
   sourceFiles:JSON.parse(t.scopes).includes('files.read')?await Promise.all(Object.entries(s.files).map(async([path,content])=>({path,digest:await digest(content)}))):undefined,
   sourceFilePolicy,backendContract:privateBackendContract,managedBackendContract,backendExample:privateBackendExample,runtime:privateRuntimeContract,missingScopes,canSubmitBuild:missingScopes.length===0,
