@@ -48,6 +48,7 @@ else if(route==='environment')content=<Suspense fallback={<Notice>Loading masked
 else if(route==='mcp'&&!nav.selectedProject)content=<Suspense fallback={<Notice>Loading connections...</Notice>}><AccountMcp/></Suspense>;
 else if(route==='mcp')content=<Suspense fallback={<Notice>Loading MCP permissions...</Notice>}><ProjectMcp key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='repair')content=<Suspense fallback={<Notice>Loading repair context...</Notice>}><ProjectRepair key={nav.selectedProject?.id} nav={nav}/></Suspense>;
+else if(route==='app')content=<Suspense fallback={<Notice>Loading your saved app...</Notice>}><ProjectPreview key={'saved-'+nav.selectedProject?.id} nav={nav} saved/></Suspense>;
 else if(route==='preview')content=<Suspense fallback={<Notice>Loading preview...</Notice>}><ProjectPreview key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='observability')content=<Suspense fallback={<Notice>Loading actual events...</Notice>}><ProjectObservability key={nav.selectedProject?.id} nav={nav}/></Suspense>;
 else if(route==='logs')content=<Suspense fallback={<Notice>Loading static builder...</Notice>}><ProjectBuild key={nav.selectedProject?.id} nav={nav}/></Suspense>;
